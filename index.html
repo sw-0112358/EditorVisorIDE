@@ -1,0 +1,1099 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=0.90, minimum-scale=0.5, maximum-scale=3.0, user-scalable=yes"> 
+
+    <title>EditorVisorIDE</title>
+
+
+
+    <!-- Manifest -->
+    <link rel="manifest" href="/manifest.json">
+
+    <!-- Ícono para pestaña del navegador -->    
+    <link rel="icon" href="/icono.jpg" type="image/jpeg">
+
+    <!-- Compatibilidad con iOS (Safari) -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="IDEApp">
+    <link rel="apple-touch-icon" href="/icono.jpg">
+
+
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/show-hint.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono&display=swap" rel="stylesheet">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/xml/xml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/css/css.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/htmlmixed/htmlmixed.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/matchbrackets.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closebrackets.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closetag.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/show-hint.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/javascript-hint.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/css-hint.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/html-hint.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/fold/foldgutter.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/fold/foldcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/fold/foldgutter.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/fold/brace-fold.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/fold/comment-fold.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/fold/xml-fold.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/format/formatting.min.js"></script>
+
+    <style>
+
+      /* ============================================================
+      VARIABLES DE TEMA — Se sobreescriben por clase en body
+      ============================================================ */
+
+      /* ----- TEMA CLARO (tu estilo original) ----- */
+      body.tema-claro {
+        --bg-editor:        #ffffff;
+        --fg-editor:        #000000;
+        --color-keyword:    #0000ff;
+        --color-string:     #008000;
+        --color-number:     #ff4500;
+        --color-comment:    #808080;
+        --color-variable:   #00008b;
+        --color-def:        #2e8b57;
+        --bg-gutter:        #f0f0f0;
+        --fg-gutter:        #555555;
+        --bg-activeline:    #e8f0fe;
+        --bg-selection:     #b3d4fc;
+        --bg-matchhighlight:#ffff99;
+        --bg-varhighlight:  #cceeff;
+        --border-matching:  #cceeff;
+        --bg-menu:          linear-gradient(135deg,rgba(153,102,204,0.9) 0%,rgba(153,102,204,0.7) 50%,rgba(0,120,215,0.6) 100%);
+        --border-menu:      #0078d7;
+        --color-menu-text:  #fff;
+        --bg-button:        #c0c0c0;
+        --fg-button:        #000;
+        --bg-button-hover:  #a9a9a9;
+        --bg-input:         #ffffff;
+        --fg-input:         #000000;
+        --border-input:     #0078d7;
+        --bg-select:        #ffffff;
+        --fg-select:        #333;
+        --bg-body:          #f5f5f5;
+        --fold-color:       #007bff;
+        --autosave-bg:      rgba(0,0,0,0.6);
+        --autosave-color:   #ffeb3b;
+      }
+
+
+      /* ----- TEMA CLAUDE / ADAPTADO A FONDO BLANCO ----- */
+      body.tema-claude {
+        /* 🎨 Fondo y texto principal */
+        --bg-body:          #ffffff;   /* Fondo general blanco */
+        --bg-editor:        #ffffff;   /* Fondo del área de código */
+        --fg-editor:        #000000;   /* Texto negro */
+
+        /* 🔑 Sintaxis del código */
+        --color-keyword:    #d69fd5;   /* Lavanda — palabras clave */
+        --color-string:     #2e8b57;   /* Verde menta — cadenas */
+        --color-number:     #fab387;   /* Melocotón — números */
+        --color-comment:    #6c7086;   /* Gris azulado — comentarios */
+        --color-variable:   #DAA520;   /* Dorado mostaza — variables */
+        --color-def:        #89b4fa;   /* Azul claro — funciones */
+
+        /* 📑 Gutter y resaltados */
+        --bg-gutter:        #f0f0f0;   /* Gris claro */
+        --fg-gutter:        #555555;   /* Gris medio */
+        --bg-activeline:    #e8f0fe;   /* Azul muy claro para línea activa */
+        --bg-selection:     #b3d4fc;   /* Azul claro para selección */
+        --bg-matchhighlight:#ffff99;   /* Amarillo suave para coincidencias */
+        --bg-varhighlight:  #cceeff;   /* Azul claro para variables resaltadas */
+        --border-matching:  #89b4fa;   /* Azul claro para coincidencias */
+        --fold-color:       #cba6f7;   /* Lavanda para plegado */
+
+        /* 🖱️ Menús y botones */
+        --bg-menu:          linear-gradient(135deg,
+          rgba(153,102,204,0.9) 0%,
+          rgba(153,102,204,0.7) 50%,
+          rgba(0,120,215,0.6) 100%); /* degradado lavanda/azul */
+        --border-menu:      #cba6f7;   /* Lavanda */
+        --color-menu-text:  #000000;   /* Texto negro para contraste */
+        --bg-button:        #c0c0c0;   /* Gris claro */
+        --fg-button:        #000000;   /* Texto negro */
+        --bg-button-hover:  #a9a9a9;   /* Gris más oscuro al pasar */
+
+        /* 🔤 Inputs y selects */
+        --bg-input:         #ffffff;   /* Fondo blanco */
+        --fg-input:         #000000;   /* Texto negro */
+        --border-input:     #cba6f7;   /* Lavanda */
+        --bg-select:        #ffffff;   /* Fondo blanco */
+        --fg-select:        #333333;   /* Texto gris oscuro */
+
+        /* 💾 AutoGuardado */
+        --autosave-bg:      rgba(0,0,0,0.6); /* Negro semi-transparente */
+        --autosave-color:   #a6e3a1;   /* Verde menta */
+      }
+
+
+
+      /* ============================================================
+      ESTILOS GLOBALES (usan variables)
+      ============================================================ */
+
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: Arial, sans-serif;
+        height: 100vh;
+        width: 100vw;
+        overflow: hidden;
+        background-color: var(--bg-body);
+        transition: background-color 0.3s;
+      }
+
+      #editor {
+        height: 100%;
+        width: 100vw;
+        border: none;
+      }
+
+      /* ---- CodeMirror base ---- */
+      .CodeMirror {
+        font-family: 'JetBrains Mono', monospace;
+        background-color: var(--bg-editor) !important;
+        color: var(--fg-editor) !important;
+        font-size: 14px;
+        -webkit-user-select: text;
+        user-select: text;
+        transition: background-color 0.3s, color 0.3s;
+      }
+
+      .CodeMirror pre { line-height: 1.2 !important; }
+
+      .CodeMirror-gutters {
+        background-color: var(--bg-gutter) !important;
+        border-right: 1px solid var(--bg-selection) !important;
+      }
+
+      .CodeMirror-linenumber {
+        color: var(--fg-gutter) !important;
+      }
+
+      .CodeMirror-activeline-background {
+        background: var(--bg-activeline) !important;
+      }
+
+      /* ---- Sintaxis (variables) ---- */
+      .cm-keyword  { color: var(--color-keyword)  !important; font-weight: bold; }
+      .cm-string   { color: var(--color-string)   !important; }
+      .cm-number   { color: var(--color-number)   !important; }
+      .cm-comment  { color: var(--color-comment)  !important; font-style: italic; }
+      .cm-variable { color: var(--color-variable) !important; }
+      .cm-def      { color: var(--color-def)      !important; }
+
+      /* Tags HTML */
+      .cm-tag      { color: var(--color-keyword)  !important; font-weight: bold; }
+      .cm-attribute{ color: var(--color-def)      !important; }
+
+      /* ---- Highlights ---- */
+      .cm-variable-highlight {
+        background-color: var(--bg-varhighlight);
+        color: var(--fg-editor) !important;
+        font-weight: bold;
+        border-radius: 3px;
+      }
+
+      .CodeMirror .cm-matchhighlight {
+        background-color: var(--bg-matchhighlight);
+        color: inherit;
+      }
+
+      .CodeMirror-matchingbracket {
+        background-color: var(--border-matching) !important;
+        color: var(--fg-editor) !important;
+        font-weight: bold;
+      }
+
+      .CodeMirror-nonmatchingbracket {
+        background-color: #f38ba8 !important;
+        color: #1e1e2e !important;
+      }
+
+      .CodeMirror-selected {
+        background: var(--bg-selection) !important;
+      }
+
+      /* ---- Fold ---- */
+      .CodeMirror-foldmarker {
+        font-size: 12px;
+        color: var(--fold-color);
+        font-weight: bold;
+        cursor: pointer;
+        padding: 0 4px;
+      }
+
+      .cm-property {
+        color: #1E90FF !important; /* Azul electrónico (DodgerBlue) */
+        font-weight: normal;
+      }
+
+      .CodeMirror-foldgutter { width: 15px; }
+
+      .CodeMirror-foldgutter-open:after   { content: "▷"; font-size: 10px; cursor: pointer; }
+      .CodeMirror-foldgutter-folded:after { content: "⨭"; font-size: 10px; cursor: pointer; }
+
+      /* ---- Scroll ---- */
+      .CodeMirror-scroll::-webkit-scrollbar        { width: 8px; height: 8px; }
+      .CodeMirror-scroll::-webkit-scrollbar-track  { background: var(--bg-gutter); }
+      .CodeMirror-scroll::-webkit-scrollbar-thumb  { background: var(--fg-gutter); border-radius: 4px; }
+
+      /* ============================================================
+      MENÚ FLOTANTE
+      ============================================================ */
+
+      .collapsible {
+        position: fixed;
+        top: 90%;
+        right: 10px;
+        background-color: transparent;
+        color: white;
+        cursor: pointer;
+        padding: 12px;
+        border: none;
+        border-radius: 5px;
+        font-size: 16px;
+        z-index: 9999;
+      }
+
+      .active, .collapsible:hover { background-color: transparent; }
+
+      .menuFullPantalla {
+        position: fixed;
+        top: 55%;
+        right: 20px;
+        width: 300px;
+        background: var(--bg-menu);
+        color: var(--color-menu-text);
+        padding: 15px;
+        border-radius: 8px;
+        border: 2px solid var(--border-menu);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        z-index: 9999;
+        transition: background 0.3s, border-color 0.3s;
+      }
+
+
+      .bottonV2 {
+        background: none;       /* sin fondo */
+        border: none;           /* sin borde */
+        padding: 0;             /* sin relleno */
+        margin: 0;
+        font-size: 20px;        /* tamaño del emoji */
+        line-height: 1;
+        cursor: pointer;
+        color: inherit;         /* usa el color natural del emoji */
+        transition: transform 0.2s, opacity 0.2s;
+      }
+
+      .bottonV2:hover {
+        transform: scale(1.2);  /* pequeño zoom al pasar */
+        opacity: 0.8;           /* efecto sutil */
+      }
+
+      /* 🔒 Evita que cambie al hacer click */
+      .bottonV2:active,
+      .bottonV2:focus {
+        background: none;
+        border: none;
+        color: inherit;
+        transform: none;        /* no cambia tamaño al presionar */
+        opacity: 1;             /* mantiene opacidad normal */
+        outline: none;          /* quita borde de enfoque */
+      }
+
+
+      .botones {
+        margin-top: 15px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      /* ---- Botones ---- */
+      button {
+        background-color: var(--bg-button);
+        color: var(--fg-button);
+        border: none;
+        padding: 10px 16px;
+        margin: 4px;
+        border-radius: 6px;
+        font-size: 14px;
+        cursor: pointer;
+        transition: background-color 0.3s, transform 0.2s;
+      }
+
+      button:hover {
+        background-color: var(--bg-button-hover);
+        transform: scale(1.05);
+      }
+
+      button:active {
+        background-color: #3e8e41;
+        transform: scale(0.95);
+      }
+
+      /* ---- Selects ---- */
+      select {
+        font-size: 14px;
+        width: auto;
+        min-width: 120px;
+        padding: 6px 10px;
+        text-align: center;
+        border: 1px solid var(--border-input);
+        border-radius: 6px;
+        background-color: var(--bg-select);
+        color: var(--fg-select);
+        cursor: pointer;
+        transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+      }
+
+      /* ---- Inputs ---- */
+      input[type="text"] {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 14px;
+        width: 120px;
+        color: var(--fg-input) !important;
+        background-color: var(--bg-input) !important;
+        border: 2px solid var(--border-input);
+        border-radius: 10px;
+        padding: 6px 10px;
+        outline: none;
+        transition: border-color 0.3s, box-shadow 0.3s, background-color 0.3s, color 0.3s;
+      }
+
+      input[type="text"]:focus {
+        border-color: var(--fold-color);
+        box-shadow: 0 0 4px rgba(0,120,215,0.5);
+      }
+
+      /* ---- Selector de tema — etiqueta visual ---- */
+      #temaSelector {
+        min-width: 110px;
+        font-weight: bold;
+        letter-spacing: 0.03em;
+      }
+
+      /* ---- Mensaje autosave ---- */
+      #autosaveMsg {
+        position: fixed;
+        bottom: 10px;
+        right: 10px;
+        background: var(--autosave-bg);
+        color: var(--autosave-color);
+        padding: 6px 12px;
+        border-radius: 5px;
+        font-size: 12px;
+        display: none;
+        z-index: 9999;
+        transition: background 0.3s, color 0.3s;
+      }
+
+
+
+      /* ============================================================
+      MENÚ REEMPLAZAR CÓDIGO
+      ============================================================ */
+      #menuReemplazar {
+        position: fixed;
+        top: 30%;
+        right: 20px;
+        width: 320px;
+        background: var(--bg-menu);
+        color: var(--color-menu-text);
+        padding: 15px;
+        border-radius: 8px;
+        border: 2px solid var(--border-menu);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        z-index: 9999;
+        display: none;
+        flex-direction: column;
+        gap: 10px;
+        transition: background 0.3s, border-color 0.3s;
+      }
+
+      #menuReemplazar textarea {
+        width: 100%;
+        height: 110px;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 12px;
+        border-radius: 6px;
+        border: 2px solid var(--border-input);
+        padding: 6px;
+        background: var(--bg-input);
+        color: var(--fg-input);
+        resize: vertical;
+        box-sizing: border-box;
+      }
+
+      #menuReemplazar label {
+        font-size: 12px;
+        font-weight: bold;
+        margin-bottom: 2px;
+        display: block;
+      }
+
+      #estadoBusqueda {
+        font-size: 12px;
+        padding: 5px 8px;
+        border-radius: 5px;
+        text-align: center;
+        display: none;
+      }
+
+      #estadoBusqueda.encontrado {
+        background: rgba(0,180,0,0.25);
+        color: #006600;
+        border: 1px solid #006600;
+      }
+
+      #estadoBusqueda.no-encontrado {
+        background: rgba(200,0,0,0.2);
+        color: #990000;
+        border: 1px solid #990000;
+      }
+
+      #seccionNuevo {
+        display: none;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+
+
+
+    </style>
+  </head>
+  <body class="tema-claro">
+
+    <button type="button" class="collapsible" onclick="traslape()">⚙️</button>
+
+    <div class="menuFullPantalla">
+      <div class="botones">
+
+        <input id="NombreProyecto" type="text" value="Proyecto1">
+
+        <select id="extSelector">
+          <option value=".html" selected>*.html</option>
+          <option value=".js">*.js</option>
+          <option value=".css">*.css</option>
+          <option value=".json">*.json</option>
+        </select>
+
+        <select id="backupSelector" onchange="aplicarBackup()">
+          <option value="">Ninguno</option>
+        </select>
+
+        <select id="menuAcciones" onchange="ejecutarAccion(this.value)">
+          <option value="">Ninguno</option>
+          <option value="AutoGuardadoonoff">⏱️Auto guardando On/Off</option>
+          <option value="undo">↩️ Deshacer</option>
+          <option value="redo">↪️ Rehacer</option>
+          <option value="limpiarBackups">🗑️ LocalStorage</option>
+          <option value="colapsar">➖ Contraer</option>
+          <option value="expandir">➕ Expandir</option>
+
+        </select>
+
+        <select id="sizeSelector" onchange="cambiarTamaño()">
+          <option value="12">12</option>
+          <option value="14" selected>14</option>
+          <option value="16">16</option>
+          <option value="18">18</option>
+          <option value="20">20</option>
+        </select>
+
+        <select id="fontSelector" onchange="cambiarFuente()">
+          <option value="'JetBrains Mono', monospace" selected>JetBrains Mono</option>
+          <option value="'Fira Code', monospace">Fira Code</option>
+          <option value="'Source Code Pro', monospace">Source Code Pro</option>
+          <option value="'Roboto Mono', monospace">Roboto Mono</option>
+          <option value="'Courier New', monospace">Courier New</option>
+        </select>
+
+        <!-- ✨ NUEVO: Selector de tema -->
+        <select id="temaSelector" onchange="cambiarTema(this.value)">
+          <option value="tema-claro">☀️ Claro</option>
+          <option value="tema-claude">🌙 Claude</option>
+        </select>
+
+        <button type="button" class="bottonV2" onclick="cargarArchivo()">📂</button>
+        <button type="button" class="bottonV2" onclick="descargarArchivo()">💾</button>
+        <button type="button" class="bottonV2" onclick="ejecutarArchivo()">▶️</button>
+        <button type="button" class="bottonV2" onclick="guardarAlportapapeles()">📃</button>      
+        <button type="button" class="bottonV2" onclick="formatearCodigo()">✨</button>
+        <button type="button" class="bottonV2" onclick="abrirMenuReemplazar()">✏️</button>      
+
+      </div>
+    </div>
+
+
+    <!-- MENÚ REEMPLAZAR -->
+    <div id="menuReemplazar">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+        <strong>✏️ Buscar y reemplazar</strong>
+        <button type="button" class="bottonV2" onclick="cerrarMenuReemplazar()" title="Cerrar">✖️</button>
+      </div>
+
+      <!-- FASE 1: buscar -->
+      <div id="seccionBuscar" style="display:flex;flex-direction:column;gap:8px;">
+        <label for="txtBuscar">📋 Pega el código a buscar:</label>
+        <textarea id="txtBuscar" placeholder="Pega aquí el fragmento original…"></textarea>
+        <button type="button" onclick="buscarCodigo()">🔍 Buscar</button>
+      </div>
+
+      <!-- Estado de búsqueda -->
+      <div id="estadoBusqueda"></div>
+
+      <!-- FASE 2: nuevo código (aparece solo si se encontró) -->
+      <div id="seccionNuevo">
+        <label for="txtNuevo">🆕 Pega el código de reemplazo:</label>
+        <textarea id="txtNuevo" placeholder="Pega aquí el nuevo código…"></textarea>
+        <div style="display:flex;gap:8px;">
+          <button type="button" onclick="ejecutarReemplazo()" style="flex:1;">✅ Reemplazar</button>
+          <button type="button" onclick="reiniciarMenuReemplazar()" style="flex:1;">🔄 Nueva búsqueda</button>
+        </div>
+      </div>
+    </div>
+
+
+    <div id="autosaveMsg">Guardado ✔️</div>
+
+    <textarea id="editor"></textarea> 
+
+    <script>
+
+      /* ============================================================
+         CAMBIO DE TEMA
+         ============================================================ */
+      function cambiarTema(tema) {
+        document.body.classList.remove("tema-claro", "tema-claude");
+        document.body.classList.add(tema);
+
+        // Guardar preferencia
+        try { localStorage.setItem("editorTema", tema); } catch(e) {}
+
+        // Refrescar editor para que CodeMirror repinte
+        setTimeout(() => editor.refresh(), 50);
+
+        mostrarEstado(tema === "tema-claude" ? "🌙 Tema Claude activado" : "☀️ Tema Claro activado");
+      }
+
+      /* ============================================================
+         ACCIONES DEL MENÚ
+         ============================================================ */
+      function ejecutarAccion(valor) {
+        try {
+          switch (valor) {
+            case "AutoGuardadoonoff": onoffAutoguardado();      break;
+            case "undo":             deshacer();                break;
+            case "redo":             rehacer();                 break;
+            case "limpiarBackups":   limpiarBackups();          break;
+            case "colapsar":         colapsarFunciones();       break;
+            case "expandir":         expandirFunciones();       break;
+            default: break;
+          }
+        } finally {
+          // Siempre resetea el select, incluso si hubo error
+          document.getElementById("menuAcciones").value = "";
+        }
+      }
+
+      /* ============================================================
+         INICIALIZACIÓN DEL EDITOR
+         ============================================================ */
+      const editor = CodeMirror.fromTextArea(document.getElementById("editor"), {
+        mode:            "htmlmixed",
+        lineNumbers:     true,
+        matchBrackets:   true,
+        autoCloseBrackets: true,
+        autoCloseTags:   true,
+        highlightSelectionMatches: { showToken: /\w/, annotateScrollbar: true },
+        foldGutter:      true,
+        gutters:         ["CodeMirror-linenumbers", "CodeMirror-foldgutter"],
+        indentUnit:      2,
+        tabSize:         2,
+        smartIndent:     true,
+        styleActiveLine: true
+      });
+
+      /* ============================================================
+         FUNCIONES DE EDICIÓN
+         ============================================================ */
+      function cambiarTamaño() {
+        const tamaño = document.getElementById("sizeSelector").value;
+        editor.getWrapperElement().style.fontSize = tamaño + "px";
+        editor.refresh();
+      }
+
+      function cambiarFuente() {
+        const fuente = document.getElementById("fontSelector").value;
+        editor.getWrapperElement().style.fontFamily = fuente;
+        editor.refresh();
+      }
+
+      function mostrarEstado(msg) {
+        const estado = document.createElement("div");
+        estado.textContent = msg;
+        estado.style.cssText = "position:fixed;bottom:10px;left:10px;background:rgba(0,0,0,0.6);color:#fff;padding:6px 12px;border-radius:5px;font-size:12px;z-index:9999;white-space:pre-wrap;word-wrap:break-word;max-width:300px;";
+        document.body.appendChild(estado);
+        setTimeout(() => estado.remove(), 2000);
+      }
+
+      function deshacer() {
+        editor.undo();
+        editor.scrollIntoView(editor.getCursor());
+        mostrarEstado("↩️ Cambio deshecho");
+      }
+
+      function rehacer() {
+        editor.redo();
+        editor.scrollIntoView(editor.getCursor());
+        mostrarEstado("↪️ Cambio rehecho");
+      }
+
+      function colapsarFunciones() {
+        const lastLine = editor.lineCount();
+        for (let i = 0; i < lastLine; i++) {
+          if (/function\s|\bclass\s/.test(editor.getLine(i))) {
+            editor.foldCode({line: i, ch: 0}, null, "fold");
+          }
+        }
+      }
+
+      function expandirFunciones() {
+        const lastLine = editor.lineCount();
+        for (let i = 0; i < lastLine; i++) {
+          if (/function\s|\bclass\s/.test(editor.getLine(i))) {
+            editor.foldCode({line: i, ch: 0}, null, "unfold");
+          }
+        }
+      }
+
+      function formatearCodigo() {
+        const totalLines = editor.lineCount();
+        editor.operation(() => {
+          for (let i = 0; i < totalLines; i++) editor.indentLine(i, "smart");
+        });
+        // 👉 Ocultar menú flotante
+        traslape();
+      }
+
+      function nombreDelHtml() {
+        const valor = (document.getElementById("NombreProyecto").value.trim()) || "archivo_editado";
+        const ext   = document.getElementById("extSelector").value || ".html";
+        return valor + ext;
+      }
+
+      function cargarArchivo() {
+        const fileInput = document.createElement("input");
+        fileInput.type = "file";
+        fileInput.accept = ".html,.js,.css,.json,.md";
+        fileInput.onchange = () => {
+          const file = fileInput.files[0];
+          if (!file) return alert("Selecciona un archivo válido");
+          const reader = new FileReader();
+          reader.onload = e => {
+            editor.setValue(e.target.result);
+            document.getElementById("NombreProyecto").value = file.name.replace(/\.[^/.]+$/, "");
+            const ext = file.name.split(".").pop().toLowerCase();
+            const modeMap = { html:"htmlmixed", js:"javascript", css:"css", json:"application/json", md:"markdown" };
+            editor.setOption("mode", modeMap[ext] || "text/plain");
+            mostrarEstado("📂 " + file.name + " cargado");
+          };
+          reader.readAsText(file);
+        };
+        fileInput.click();
+      }
+
+      function ejecutarArchivo() {
+        try {
+          const blob = new Blob([editor.getValue()], { type: "text/html" });
+          const url  = URL.createObjectURL(blob);
+          const nv   = window.open(url, "_blank");
+          if (!nv) {
+            mostrarEstado("⚠️ El navegador bloqueó la ventana emergente");
+          } else {
+            // Liberar URL después de que la ventana la haya usado
+            nv.addEventListener("load", () => URL.revokeObjectURL(url), { once: true });
+          }
+        } catch(e) {
+          mostrarEstado("❌ Error al ejecutar: " + e.message);
+        }
+      }
+
+      function traslape() {
+        const menu = document.querySelector(".menuFullPantalla");
+        menu.style.display = menu.style.display === "none" ? "block" : "none";
+      }
+
+      function guardarAlportapapeles() {
+        navigator.clipboard.writeText(editor.getValue())
+          .then(()  => mostrarEstado("📋 Editor al portapapeles"))
+          .catch(err => alert("No se pudo copiar: " + err));
+      }
+
+      function descargarArchivo() {
+        const blob = new Blob([editor.getValue()], { type: "text/plain" });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = nombreDelHtml();
+        a.click();
+        URL.revokeObjectURL(a.href);
+      }
+
+      function setEditorNormal() { editor.setSize("100%", "90%"); }
+
+      /* ============================================================
+         BACKUPS
+         ============================================================ */
+      const BackupsKey = '_IDEv2Backups';
+
+      function reiniciarSelector() {
+        const s = document.getElementById("backupSelector");
+        while (s.options.length > 0) s.remove(0);
+        const opt = document.createElement("option");
+        opt.value = ""; opt.textContent = "Ninguno";
+        s.appendChild(opt);
+      }
+
+      function limpiarBackups() {
+        let borrados = 0;
+        for (let i = localStorage.length - 1; i >= 0; i--) {
+          const key = localStorage.key(i);
+          if (key && key.endsWith(BackupsKey)) { localStorage.removeItem(key); borrados++; }
+        }
+        mostrarEstado("🗑️ Keys(" + borrados + ")");
+        iBackupGuardados = 0;
+        reiniciarSelector();
+        setListBackup();
+      }
+
+      let iBackupGuardados = 0;
+      function guardarBackup(contenido) {
+        const nombre     = nombreDelHtml();
+        const key        = iBackupGuardados + ": [" + nombre + "]" + BackupsKey;
+        const pesoBytes  = new Blob([contenido]).size;
+        const pesoKB     = (pesoBytes / 1024).toFixed(2);
+        const data       = { contenido, fecha: new Date().toLocaleString(), peso: `${pesoBytes} B / ${pesoKB} KB` };
+
+        // manejar desbordamiento de localStorage
+        try {
+          localStorage.setItem(key, JSON.stringify(data));
+        } catch(e) {
+          mostrarEstado("⚠️ localStorage lleno. Limpia backups (🗑️).");
+          return; // No incrementar ni agregar al selector si falló
+        }
+
+        iBackupGuardados++;
+        const selector = document.getElementById("backupSelector");
+        const opt      = document.createElement("option");
+        const limpio   = key.replace(BackupsKey, "");
+        opt.value      = limpio;
+        opt.textContent = `${limpio} - ${data.fecha} - ${data.peso}`;
+        selector.appendChild(opt);
+      }
+
+
+      function setListBackup() {
+        const selector = document.getElementById("backupSelector");
+        selector.innerHTML = '<option value="">Ninguno</option>';
+
+        const claves = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && key.endsWith(BackupsKey)) claves.push(key);
+        }
+        claves.sort((a, b) => parseInt(a) - parseInt(b));
+
+        // sincronizar el contador con el índice más alto existente
+        if (claves.length > 0) {
+          iBackupGuardados = parseInt(claves[claves.length - 1]) + 1;
+        } else {
+          iBackupGuardados = 0;
+        }
+
+        claves.forEach(key => {
+          // ignorar backups corruptos sin romper los demás
+          try {
+            const data   = JSON.parse(localStorage.getItem(key));
+            const limpio = key.replace(BackupsKey, "");
+            const opt    = document.createElement("option");
+            opt.value    = limpio;
+            opt.textContent = `${limpio} - ${data.fecha} - ${data.peso}`;
+            selector.appendChild(opt);
+          } catch(e) {
+            console.warn("Backup corrupto ignorado:", key);
+          }
+        });
+      }
+
+      function aplicarBackup() {
+        const selector     = document.getElementById("backupSelector");
+        const nombreLimpio = selector.value;
+        if (!nombreLimpio) { mostrarEstado("📂 Ningún backup seleccionado"); return; }
+
+        const key  = nombreLimpio + BackupsKey;
+        try {
+          const data = JSON.parse(localStorage.getItem(key));
+          if (data && data.contenido) {
+            editor.setValue(data.contenido);
+
+            const matchNombre = nombreLimpio.match(/\[(.+?)\]/);
+            if (matchNombre) {
+              // matchNombre[1] = "Proyecto1.html" → quitar extensión
+              const soloNombre = matchNombre[1].replace(/\.[^/.]+$/, "");
+              document.getElementById("NombreProyecto").value = soloNombre;
+            }
+
+            mostrarEstado(`📂 Backup "${nombreLimpio}" cargado (${data.fecha})`);
+          } else {
+            mostrarEstado("⚠️ No se encontró contenido en esa key");
+          }
+        } catch(e) {
+          mostrarEstado("❌ Error al cargar backup: " + e.message);
+        }
+      }
+
+
+      /* ============================================================
+         AUTOGUARDADO
+         ============================================================ */
+      let autoguardado   = true;
+      let ultimoContenido = "";
+
+      setInterval(() => {
+        if (!autoguardado) return;
+        const contenido = editor.getValue();
+        if (contenido !== ultimoContenido) {
+          guardarBackup(contenido);
+          ultimoContenido = contenido;
+          const msg = document.getElementById("autosaveMsg");
+          msg.style.display = "block";
+          setTimeout(() => msg.style.display = "none", 2000);
+        }
+      }, 10000);
+
+      function onoffAutoguardado() {
+        autoguardado = !autoguardado;
+        mostrarEstado("⏱️ Autoguardado " + (autoguardado ? "activado" : "desactivado"));
+      }
+
+      /* ============================================================
+         AUTOCOMPLETE Y HIGHLIGHT
+         ============================================================ */
+      editor.on("inputRead", function(cm, change) {
+        if (change.text[0] && /[A-Za-z]/.test(change.text[0])) {
+          cm.showHint({ completeSingle: false });
+        }
+      });
+
+      let highlightTimeout;
+
+      editor.on("cursorActivity", function(cm) {
+        // 👉 Si hay selección de texto, no hacemos nada
+        // Esto permite que el menú nativo de copiar/pegar aparezca sin bloquearlo
+        if (cm.somethingSelected()) {
+          return;
+        }
+
+        // 👉 Si NO hay selección, resalta la línea activa
+        const cursor = cm.getCursor();
+        cm.addLineClass(cursor.line, "background", "line-active");
+
+        // 👉 Resaltado de variables con timeout
+        clearTimeout(highlightTimeout);
+        highlightTimeout = setTimeout(() => {
+          cm.getAllMarks().forEach(m => m.clear());
+          const token = cm.getTokenAt(cursor);
+
+          if (token && /^[A-Za-z_]\w*$/.test(token.string)) {
+            const regex = new RegExp("\\b" + token.string + "\\b", "g");
+
+            cm.eachLine(line => {
+              const text = line.text;
+              let match;
+              while ((match = regex.exec(text)) !== null) {
+                cm.markText(
+                  { line: line.lineNo(), ch: match.index },
+                  { line: line.lineNo(), ch: match.index + token.string.length },
+                  { className: "cm-variable-highlight" }
+                );
+              }
+            });
+          }
+        }, 2000);
+      });
+
+      /* ============================================================
+         HTML POR DEFECTO
+         ============================================================ */
+      function htmlPorDefecto() {
+        return `<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Documento por defecto</title>
+
+  <style>
+    /* Aquí puedes escribir estilos CSS iniciales */
+      </style>
+      </head>
+<body>
+  <h1>Bienvenido al EditorVisor</h1>
+  <p>Este es un documento HTML cargado por defecto.</p>
+
+  <script>
+    // Aquí puedes escribir código JS inicial
+  <\/script>
+<\/body>
+<\/html>
+`;
+      }
+
+
+
+
+
+      /* ============================================================
+   MENÚ REEMPLAZAR CÓDIGO
+   ============================================================ */
+      function abrirMenuReemplazar() {
+        // Ocultar menú principal
+        document.querySelector(".menuFullPantalla").style.display = "none";
+        // Mostrar menú reemplazar
+        const m = document.getElementById("menuReemplazar");
+        m.style.display = "flex";
+        reiniciarMenuReemplazar();
+      }
+
+      function cerrarMenuReemplazar() {
+        document.getElementById("menuReemplazar").style.display = "none";
+        // Restaurar menú principal
+        document.querySelector(".menuFullPantalla").style.display = "block";
+      }
+
+      function reiniciarMenuReemplazar() {
+        document.getElementById("txtBuscar").value  = "";
+        document.getElementById("txtNuevo").value   = "";
+        document.getElementById("estadoBusqueda").style.display  = "none";
+        document.getElementById("estadoBusqueda").className      = "";
+        document.getElementById("estadoBusqueda").textContent    = "";
+        document.getElementById("seccionNuevo").style.display    = "none";
+        document.getElementById("seccionBuscar").style.display   = "flex";
+      }
+
+      function buscarCodigo() {
+        const buscar  = document.getElementById("txtBuscar").value;
+        const estado  = document.getElementById("estadoBusqueda");
+        const secNuevo = document.getElementById("seccionNuevo");
+
+        if (!buscar.trim()) {
+          estado.style.display  = "block";
+          estado.className      = "no-encontrado";
+          estado.textContent    = "⚠️ El campo de búsqueda está vacío.";
+          secNuevo.style.display = "none";
+          return;
+        }
+
+        const contenido = editor.getValue();
+        const idx       = contenido.indexOf(buscar);
+
+        estado.style.display = "block";
+
+        if (idx !== -1) {
+          // Contar ocurrencias
+          let ocurrencias = 0;
+          let pos = 0;
+          while ((pos = contenido.indexOf(buscar, pos)) !== -1) { ocurrencias++; pos += buscar.length; }
+
+          estado.className   = "encontrado";
+          estado.textContent = `✅ Encontrado: ${ocurrencias} ocurrencia${ocurrencias > 1 ? "s" : ""}`;
+
+          // Resaltar primera ocurrencia en el editor
+          const from = editor.posFromIndex(idx);
+          const to   = editor.posFromIndex(idx + buscar.length);
+          editor.setSelection(from, to);
+          editor.scrollIntoView({ from, to }, 80);
+
+          // Mostrar sección de nuevo código
+          secNuevo.style.display = "flex";
+        } else {
+          estado.className       = "no-encontrado";
+          estado.textContent     = "❌ No encontrado en el editor.";
+          secNuevo.style.display = "none";
+        }
+      }
+
+      function ejecutarReemplazo() {
+        const buscar  = document.getElementById("txtBuscar").value;
+        const nuevo   = document.getElementById("txtNuevo").value;
+
+        if (!buscar.trim()) { mostrarEstado("⚠️ Nada que reemplazar"); return; }
+
+        const contenido   = editor.getValue();
+        const reemplazado = contenido.split(buscar).join(nuevo);
+
+        if (reemplazado === contenido) {
+          mostrarEstado("⚠️ No se realizaron cambios");
+          return;
+        }
+
+        // Contar cuántas veces se reemplazó
+        const veces = contenido.split(buscar).length - 1;
+        editor.setValue(reemplazado);
+        cerrarMenuReemplazar();
+        mostrarEstado(`✏️ ${veces} reemplazo${veces > 1 ? "s" : ""} realizado${veces > 1 ? "s" : ""}`);
+      }
+
+
+
+
+      /* ============================================================
+         INIT
+         ============================================================ */
+      window.addEventListener("beforeunload", e => {
+        e.preventDefault();
+        e.returnValue = "¿Seguro que quieres salir?";
+      });
+
+      document.addEventListener("DOMContentLoaded", () => {
+        setEditorNormal();
+        setListBackup();
+        editor.setValue(htmlPorDefecto());
+
+        // Restaurar tema guardado
+        try {
+          const temaGuardado = localStorage.getItem("editorTema");
+          if (temaGuardado) {
+            document.getElementById("temaSelector").value = temaGuardado;
+            cambiarTema(temaGuardado);
+          }
+        } catch(e) {}
+      });
+
+    </script>
+
+
+    <script>
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.register("/sw.js")
+          .then(() => console.log("Service Worker registrado"))
+          .catch((err) => console.error("Error al registrar SW:", err));
+      }
+    </script>
+
+
+
+  </body>
+</html>
