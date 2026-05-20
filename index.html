@@ -9,15 +9,15 @@
 
 
     <!-- Manifest -->
-    <link rel="manifest" href="/manifest.json">
+    <link rel="manifest" href="manifest.json">
 
     <!-- Ícono para pestaña del navegador -->    
-    <link rel="icon" href="/icono.jpg" type="image/jpeg">
+    <link rel="icon" href="icono.jpg" type="image/jpeg">
 
     <!-- Compatibilidad con iOS (Safari) -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="IDEApp">
-    <link rel="apple-touch-icon" href="/icono.jpg">
+    <link rel="apple-touch-icon" href="icono.jpg">
 
 
 
@@ -1087,7 +1087,7 @@
 
     <script>
       if ("serviceWorker" in navigator) {
-        navigator.serviceWorker.register("/sw.js")
+        navigator.serviceWorker.register("sw.js")
           .then(() => console.log("Service Worker registrado"))
           .catch((err) => console.error("Error al registrar SW:", err));
       }
