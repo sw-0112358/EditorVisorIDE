@@ -890,7 +890,8 @@
 
       /* ============================================================
          AUTOCOMPLETE Y HIGHLIGHT
-         ============================================================ */
+         ✅ FIX: bandera + cm.operation() evitan que el cursor salte
+      ============================================================ */
       editor.on("inputRead", function(cm, change) {
         if (change.text[0] && /[A-Za-z]/.test(change.text[0])) {
           cm.showHint({ completeSingle: false });
@@ -898,41 +899,46 @@
       });
 
       let highlightTimeout;
+      let aplicandoMarks = false; // 🔒 evita reentrada en cursorActivity
 
       editor.on("cursorActivity", function(cm) {
-        // 👉 Si hay selección de texto, no hacemos nada
-        // Esto permite que el menú nativo de copiar/pegar aparezca sin bloquearlo
-        if (cm.somethingSelected()) {
-          return;
-        }
+        // Si hay selección, no interferir (permite menú nativo copiar/pegar)
+        if (cm.somethingSelected()) return;
+        // Si ya estamos aplicando marks, no reentrar
+        if (aplicandoMarks) return;
 
-        // 👉 Si NO hay selección, resalta la línea activa
         const cursor = cm.getCursor();
-        cm.addLineClass(cursor.line, "background", "line-active");
 
-        // 👉 Resaltado de variables con timeout
         clearTimeout(highlightTimeout);
         highlightTimeout = setTimeout(() => {
-          cm.getAllMarks().forEach(m => m.clear());
-          const token = cm.getTokenAt(cursor);
+          aplicandoMarks = true; // 🔒 bloquear
 
-          if (token && /^[A-Za-z_]\w*$/.test(token.string)) {
-            const regex = new RegExp("\\b" + token.string + "\\b", "g");
+          // cm.operation() agrupa todos los cambios en una sola
+          // operación atómica: CodeMirror no dispara eventos intermedios
+          cm.operation(() => {
+            cm.getAllMarks().forEach(m => m.clear());
 
-            cm.eachLine(line => {
-              const text = line.text;
-              let match;
-              while ((match = regex.exec(text)) !== null) {
-                cm.markText(
-                  { line: line.lineNo(), ch: match.index },
-                  { line: line.lineNo(), ch: match.index + token.string.length },
-                  { className: "cm-variable-highlight" }
-                );
-              }
-            });
-          }
+            const token = cm.getTokenAt(cursor);
+            if (token && /^[A-Za-z_]\w*$/.test(token.string)) {
+              const regex = new RegExp("\\b" + token.string + "\\b", "g");
+              cm.eachLine(line => {
+                const text = line.text;
+                let match;
+                while ((match = regex.exec(text)) !== null) {
+                  cm.markText(
+                    { line: line.lineNo(), ch: match.index },
+                    { line: line.lineNo(), ch: match.index + token.string.length },
+                    { className: "cm-variable-highlight" }
+                  );
+                }
+              });
+            }
+          });
+
+          aplicandoMarks = false; // 🔒 liberar
         }, 2000);
       });
+
 
       /* ============================================================
          HTML POR DEFECTO
