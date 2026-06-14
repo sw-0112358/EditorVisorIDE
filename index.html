@@ -600,6 +600,276 @@
         transition: background 0.9s ease-out;
       }
 
+
+      /* ============================================================
+      MODAL CLAUDE IA
+      ============================================================ */
+      .modalClaude {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.65);
+        z-index: 99998;
+        display: none;
+        align-items: center;
+        justify-content: center;
+      }
+      .modalClaude.visible { display: flex; }
+
+      #claudeBox {
+        background: #1e1e2e;
+        color: #cdd6f4;
+        width: 92vw;
+        max-width: 780px;
+        height: 82vh;
+        border-radius: 12px;
+        border: 2px solid #cba6f7;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        box-shadow: 0 12px 40px rgba(0,0,0,0.7);
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 13px;
+      }
+
+      #claudeHeader {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 16px;
+        background: #181825;
+        border-bottom: 1px solid #45475a;
+        flex-shrink: 0;
+      }
+      #claudeHeader strong { font-size: 14px; color: #cba6f7; }
+
+      #claudeAcciones {
+        display: flex;
+        gap: 6px;
+        padding: 8px 12px;
+        background: #181825;
+        border-bottom: 1px solid #45475a;
+        flex-shrink: 0;
+        flex-wrap: wrap;
+      }
+      #claudeAcciones button {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 11px;
+        padding: 5px 10px;
+        margin: 0;
+        border-radius: 6px;
+        border: 1px solid #45475a;
+        background: #313244;
+        color: #cdd6f4;
+        cursor: pointer;
+        transition: background 0.15s, border-color 0.15s;
+      }
+      #claudeAcciones button:hover {
+        background: #45475a;
+        border-color: #cba6f7;
+        transform: none;
+      }
+      #claudeAcciones button:active { background: #585b70; transform: none; }
+
+      #claudeContextoInfo {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 10px;
+        color: #6c7086;
+        padding: 4px 14px;
+        background: #181825;
+        border-bottom: 1px solid #313244;
+        flex-shrink: 0;
+        min-height: 20px;
+      }
+
+      #claudeChat {
+        flex: 1;
+        overflow-y: auto;
+        padding: 12px 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      #claudeChat::-webkit-scrollbar        { width: 6px; }
+      #claudeChat::-webkit-scrollbar-track  { background: #181825; }
+      #claudeChat::-webkit-scrollbar-thumb  { background: #45475a; border-radius: 3px; }
+
+      .claude-msg {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        max-width: 92%;
+      }
+      .claude-msg.usuario { align-self: flex-end; }
+      .claude-msg.asistente { align-self: flex-start; }
+
+      .claude-msg-label {
+        font-size: 9px;
+        color: #6c7086;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        padding: 0 4px;
+      }
+      .claude-msg.usuario .claude-msg-label { text-align: right; }
+
+      .claude-msg-burbuja {
+        padding: 8px 12px;
+        border-radius: 8px;
+        line-height: 1.6;
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-size: 12px;
+      }
+      .claude-msg.usuario   .claude-msg-burbuja {
+        background: #313244;
+        border: 1px solid #45475a;
+        color: #cdd6f4;
+        border-bottom-right-radius: 2px;
+      }
+      .claude-msg.asistente .claude-msg-burbuja {
+        background: #1e1e2e;
+        border: 1px solid #cba6f7;
+        color: #cdd6f4;
+        border-bottom-left-radius: 2px;
+      }
+
+      /* Cursor parpadeante mientras stream */
+      .claude-cursor::after {
+        content: "▌";
+        animation: parpadeo 0.7s step-end infinite;
+        color: #cba6f7;
+      }
+      @keyframes parpadeo { 0%,100%{opacity:1} 50%{opacity:0} }
+
+      #claudeInputBar {
+        display: flex;
+        gap: 8px;
+        padding: 10px 12px;
+        background: #181825;
+        border-top: 1px solid #45475a;
+        flex-shrink: 0;
+        align-items: flex-end;
+      }
+
+      #claudeInput {
+        flex: 1;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 12px;
+        background: #313244;
+        border: 1px solid #45475a;
+        border-radius: 8px;
+        color: #cdd6f4;
+        padding: 8px 10px;
+        outline: none;
+        resize: none;
+        min-height: 36px;
+        max-height: 120px;
+        line-height: 1.5;
+        transition: border-color 0.15s;
+      }
+      #claudeInput:focus { border-color: #cba6f7; }
+
+      #claudeEnviar {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 12px;
+        padding: 8px 14px;
+        margin: 0;
+        border-radius: 8px;
+        border: 1px solid #cba6f7;
+        background: #cba6f7;
+        color: #1e1e2e;
+        cursor: pointer;
+        font-weight: bold;
+        flex-shrink: 0;
+        align-self: flex-end;
+        transition: background 0.15s;
+      }
+      #claudeEnviar:hover   { background: #b48ead; transform: none; }
+      #claudeEnviar:disabled {
+        background: #45475a;
+        border-color: #45475a;
+        color: #6c7086;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .claude-vacio {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        opacity: 0.3;
+        pointer-events: none;
+      }
+      .claude-vacio .icon { font-size: 2rem; }
+      .claude-vacio p {
+        font-size: 11px;
+        color: #6c7086;
+        text-align: center;
+        line-height: 1.6;
+      }
+
+      
+      
+      /* ============================================================
+      MODAL CONFIGURACIÓN
+      ============================================================ */
+      #configBox {
+        background: #1e1e2e; color: #cdd6f4;
+        width: 92vw; max-width: 500px; max-height: 88vh;
+        border-radius: 12px; border: 2px solid #cba6f7;
+        display: flex; flex-direction: column; overflow: hidden;
+        box-shadow: 0 12px 40px rgba(0,0,0,0.7);
+        font-family: 'JetBrains Mono', monospace; font-size: 13px;
+      }
+      #configHeader {
+        display:flex; justify-content:space-between; align-items:center;
+        padding:10px 16px; background:#181825;
+        border-bottom:1px solid #45475a; flex-shrink:0;
+      }
+      #configHeader strong { font-size:14px; color:#cba6f7; }
+      #configAcciones {
+        display:flex; gap:6px; padding:8px 12px; background:#181825;
+        border-bottom:1px solid #45475a; flex-shrink:0; flex-wrap:wrap;
+      }
+      #configAcciones button {
+        font-family:'JetBrains Mono',monospace; font-size:11px;
+        padding:5px 10px; margin:0; border-radius:6px;
+        border:1px solid #45475a; background:#313244; color:#cdd6f4;
+        cursor:pointer; transition:background .15s, border-color .15s;
+      }
+      #configAcciones button:hover { background:#45475a; border-color:#cba6f7; transform:none; }
+      #configEstado {
+        font-family:'JetBrains Mono',monospace; font-size:10px; color:#6c7086;
+        padding:4px 14px; background:#181825;
+        border-bottom:1px solid #313244; flex-shrink:0; min-height:20px;
+      }
+      #configBody {
+        flex:1; overflow-y:auto; padding:14px 16px;
+        display:flex; flex-direction:column; gap:14px;
+      }
+      #configBody::-webkit-scrollbar { width:6px; }
+      #configBody::-webkit-scrollbar-thumb { background:#45475a; border-radius:3px; }
+      #configFooter {
+        padding:8px 14px; background:#181825;
+        border-top:1px solid #45475a; flex-shrink:0;
+        font-family:'JetBrains Mono',monospace; font-size:11px; color:#6c7086;
+      }
+      .config-grupo { display:flex; flex-direction:column; gap:5px; }
+      #configBody input[type="text"],
+      #configBody input[type="password"],
+      #configBody textarea {
+        width:100%; font-family:'JetBrains Mono',monospace; font-size:11px;
+        background:#313244; border:1px solid #45475a; border-radius:6px;
+        color:#cdd6f4; padding:7px 10px; outline:none;
+        box-sizing:border-box; resize:vertical; line-height:1.5;
+        transition:border-color .15s;
+      }
+      #configBody input:focus,
+      #configBody textarea:focus { border-color:#cba6f7; box-shadow:none; }
+      
+
     </style>
   </head>
   <body class="tema-claro">
@@ -677,6 +947,8 @@
         <button type="button" class="bottonV2" onclick="formatearCodigo()">✨</button>
         <button type="button" class="bottonV2" onclick="abrirMenuReemplazar()">✏️</button>
         <button type="button" class="bottonV2" onclick="toggleArbol()" title="Índice de funciones">📑</button>
+        <button type="button" class="bottonV2" onclick="abrirClaude()" title="Claude IA">🤖</button>
+        <button type="button" class="bottonV2" onclick="abrirConfig()" title="Configuración API">🔑</button>
 
       </div>
     </div>
@@ -740,10 +1012,185 @@
 
     <div id="autosaveMsg">Guardado ✔️</div>
 
+     
+    <!-- MODAL CONFIGURACIÓN -->
+    <div class="modalClaude" id="modalConfig">
+      <div id="configBox">
+
+        <div id="configHeader">
+          <strong>🔑 Configuración API</strong>
+          <button type="button" class="bottonV2" onclick="cerrarConfig()" title="Cerrar">✖️</button>
+        </div>
+
+        <div id="configAcciones">
+          <button onclick="guardarConfig()">💾 Guardar</button>
+          <button onclick="limpiarConfig()">🗑️ Limpiar</button>
+        </div>
+
+        <div id="configEstado">Sin cambios</div>
+
+        <div id="configBody">
+          <div class="config-grupo">
+            <div class="claude-msg-label">🤖 ANTHROPIC API KEY</div>
+            <input type="password" id="cfg-anthropic" placeholder="sk-ant-api03-…" autocomplete="off">
+          </div>
+          <div class="config-grupo">
+            <div class="claude-msg-label">✨ GEMINI API KEY</div>
+            <input type="password" id="cfg-gemini" placeholder="AQ.Ab8…" autocomplete="off">
+          </div>
+          <div class="config-grupo">
+            <div class="claude-msg-label">🧠 DEEPSEEK API KEY</div>
+            <input type="password" id="cfg-deepseek" placeholder="sk-cfc…" autocomplete="off">
+          </div>
+          <div class="config-grupo">
+            <div class="claude-msg-label">☁️ CLOUDFLARE PROXY URL</div>
+            <input type="text" id="cfg-proxy" placeholder="https://…workers.dev/claude" autocomplete="off">
+          </div>
+          <div class="config-grupo">
+            <div class="claude-msg-label">🗄️ KV BASE URL</div>
+            <input type="text" id="cfg-kv" placeholder="https://…workers.dev" autocomplete="off">
+          </div>
+          <div class="config-grupo">
+            <div class="claude-msg-label">📝 SYSTEM PROMPT</div>
+            <textarea id="cfg-iaroll" rows="4" placeholder="Eres un asistente…"></textarea>
+          </div>
+        </div>
+
+        <div id="configFooter">
+          <span>🔒 Guardado en localStorage</span>
+        </div>
+
+      </div>
+    </div>
+    
+    
+    <!-- MODAL CLAUDE IA -->
+    <div class="modalClaude" id="modalClaude1">
+    
+      <div id="claudeBox">
+
+        <div id="claudeHeader">
+          <strong>🤖 Asistente de código</strong>
+          <select id="claudeModeloSelector" onchange="claudeCambiarModelo(this.value)"
+                  style="font-family:'JetBrains Mono',monospace;font-size:11px;background:#313244;
+                         color:#cdd6f4;border:1px solid #45475a;border-radius:6px;
+                         padding:4px 8px;cursor:pointer;outline:none;">
+            <option value="claude">🤖 Claude Sonnet</option>
+            <option value="gemini">✨ Gemini Flash</option>
+            <option value="deepseek" selected>🧠 DeepSeek</option>
+          </select>
+          <button type="button" class="bottonV2" onclick="cerrarClaude()" title="Cerrar">✖️</button>
+        </div>
+
+        <div id="claudeAcciones">
+          <button onclick="claudeContexto('todo')">📄 Todo el código</button>
+          <button onclick="claudeContexto('seleccion')">✂️ Selección</button>
+          <button onclick="claudeContexto('errores')">🔍 Revisar errores</button>
+          <button onclick="claudeContexto('mejorar')">✨ Sugerir mejoras</button>
+          <button onclick="guardarHistorialKV()">☁️ Guardar</button>
+          <button onclick="cargarHistorialKV()">📂 Cargar</button>
+          <button onclick="claudeLimpiar()">🗑️ Limpiar chat</button>
+        </div>
+
+        <div id="claudeContextoInfo">Sin contexto cargado</div>
+
+        <div id="claudeChat">
+          <div class="claude-vacio" id="claudeVacio">
+            <div class="icon">🤖</div>
+            <p>Selecciona un contexto o escribe<br>tu consulta directamente</p>
+          </div>
+        </div>
+
+        <div id="claudeInputBar">
+          <textarea id="claudeInput" placeholder="Escribe tu consulta…" rows="1"
+                    onkeydown="claudeKeydown(event)"
+                    oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'"></textarea>
+          <button id="claudeEnviar" onclick="claudeEnviar()">Enviar ↵</button>
+        </div>
+
+      </div>
+    </div>
+
     <textarea id="editor"></textarea> 
 
     <script>
 
+     
+      let APIKeyAnthropic = '';
+      let APIKeyGemini    = '';
+      let APIKeyDeepSeek  = '';
+      let IARoll          = 'Eres un asistente experto en desarrollo web integrado en un IDE llamado EditorVisorIDE. El usuario trabaja principalmente con HTML, CSS y JavaScript de archivo único. Responde de forma concisa y práctica. Cuando muestres código usa bloques de código markdown.';
+      let cloudflareProxy = 'https://shiny-bread-e818.gx0112358.workers.dev/claude';
+      let KV_BASE         = 'https://shiny-bread-e818.gx0112358.workers.dev';
+      const CFG_KEY       = '_ide_config_v1';
+
+      function cargarConfig() {
+        try {
+          const cfg = JSON.parse(localStorage.getItem(CFG_KEY) || '{}');
+          if (cfg.anthropic)  APIKeyAnthropic = cfg.anthropic;
+          if (cfg.gemini)     APIKeyGemini    = cfg.gemini;
+          if (cfg.deepseek)   APIKeyDeepSeek  = cfg.deepseek;
+          if (cfg.proxy)      cloudflareProxy = cfg.proxy;
+          if (cfg.kv)         KV_BASE         = cfg.kv;
+          if (cfg.iaroll)     IARoll          = cfg.iaroll;
+        } catch(e) {}
+      }
+
+      function abrirConfig() {
+        document.querySelector(".menuFullPantalla").style.display = "none";
+        try {
+          const cfg = JSON.parse(localStorage.getItem(CFG_KEY) || '{}');
+          document.getElementById("cfg-anthropic").value = cfg.anthropic || '';
+          document.getElementById("cfg-gemini").value    = cfg.gemini    || '';
+          document.getElementById("cfg-deepseek").value  = cfg.deepseek  || '';
+          document.getElementById("cfg-proxy").value     = cfg.proxy     || cloudflareProxy;
+          document.getElementById("cfg-kv").value        = cfg.kv        || KV_BASE;
+          document.getElementById("cfg-iaroll").value    = cfg.iaroll    || IARoll;
+        } catch(e) {}
+        document.getElementById("configEstado").textContent = "Sin cambios";
+        document.getElementById("configEstado").style.color = "#6c7086";
+        document.getElementById("modalConfig").classList.add("visible");
+      }
+
+      function cerrarConfig() {
+        document.getElementById("modalConfig").classList.remove("visible");
+        document.querySelector(".menuFullPantalla").style.display = "block";
+      }
+
+      function guardarConfig() {
+        const cfg = {
+          anthropic: document.getElementById("cfg-anthropic").value.trim(),
+          gemini:    document.getElementById("cfg-gemini").value.trim(),
+          deepseek:  document.getElementById("cfg-deepseek").value.trim(),
+          proxy:     document.getElementById("cfg-proxy").value.trim(),
+          kv:        document.getElementById("cfg-kv").value.trim(),
+          iaroll:    document.getElementById("cfg-iaroll").value.trim(),
+        };
+        try {
+          localStorage.setItem(CFG_KEY, JSON.stringify(cfg));
+          cargarConfig();
+          document.getElementById("configEstado").textContent = "✅ Guardado correctamente";
+          document.getElementById("configEstado").style.color = "#a6e3a1";
+        } catch(e) {
+          document.getElementById("configEstado").textContent = "❌ Error al guardar";
+          document.getElementById("configEstado").style.color = "#f38ba8";
+        }
+      }
+
+      function limpiarConfig() {
+        if (!confirm("¿Borrar toda la configuración?")) return;
+        localStorage.removeItem(CFG_KEY);
+        document.getElementById("cfg-anthropic").value = '';
+        document.getElementById("cfg-gemini").value    = '';
+        document.getElementById("cfg-deepseek").value  = '';
+        document.getElementById("cfg-proxy").value     = 'https://shiny-bread-e818.gx0112358.workers.dev/claude';
+        document.getElementById("cfg-kv").value        = 'https://shiny-bread-e818.gx0112358.workers.dev';
+        document.getElementById("cfg-iaroll").value    = '';
+        document.getElementById("configEstado").textContent = "🗑️ Configuración borrada";
+        document.getElementById("configEstado").style.color = "#6c7086";
+      }
+     
+      
       /* ============================================================
          CAMBIO DE TEMA
       ============================================================ */
@@ -1353,6 +1800,539 @@
       }
 
 
+
+
+      /* ============================================================
+         CLAUDE IA — API ANTHROPIC
+      ============================================================ */
+      
+      let _claudeHistorial  = []; // { role, content }
+      let _claudeContexto   = ""; // código cargado como contexto
+      let _claudeStreaming   = false;
+      let _claudeModelo     = "deepseek"; // "claude" | "gemini" | "deepseek"
+    
+      function claudeCambiarModelo(modelo) {
+        _claudeModelo = modelo;
+        // El historial y contexto se conservan al cambiar de modelo
+        mostrarEstado(
+          modelo === "gemini"   ? "✨ Gemini Flash activado" :
+          modelo === "deepseek" ? "🧠 DeepSeek activado"    :
+          "🤖 Claude Sonnet activado"
+        );
+      }
+
+      function abrirClaude() {
+        // Ocultar todos los demás paneles flotantes
+        document.querySelector(".menuFullPantalla").style.display = "none";
+        document.getElementById("menuReemplazar").style.display   = "none";
+        document.getElementById("modalDiff").classList.remove("visible");
+        if (_arbolVisible) cerrarArbol();
+
+        // Cargar selección automáticamente si hay texto seleccionado
+        const seleccion = editor.getSelection();
+        if (seleccion && seleccion.trim()) {
+          _claudeContexto = seleccion;
+          document.getElementById("claudeContextoInfo").textContent =
+            `✂️ Selección cargada — ${seleccion.split("\n").length} líneas · ${seleccion.length} chars`;
+        } else {
+          _claudeContexto = "";
+          document.getElementById("claudeContextoInfo").textContent = "Sin contexto cargado";
+        }
+
+        document.getElementById("modalClaude1").classList.add("visible");
+        setTimeout(() => document.getElementById("claudeInput").focus(), 100);
+      }
+
+      function cerrarClaude() {
+        document.getElementById("modalClaude1").classList.remove("visible");
+      }
+
+      function claudeContexto(tipo) {
+        const info = document.getElementById("claudeContextoInfo");
+        if (tipo === "todo") {
+          _claudeContexto = editor.getValue();
+          info.textContent = `📄 Código completo — ${editor.lineCount()} líneas · ${_claudeContexto.length} chars`;
+        } else if (tipo === "seleccion") {
+          const sel = editor.getSelection();
+          if (!sel || !sel.trim()) {
+            info.textContent = "⚠️ No hay texto seleccionado en el editor";
+            _claudeContexto = "";
+            return;
+          }
+          _claudeContexto = sel;
+          info.textContent = `✂️ Selección — ${sel.split("\n").length} líneas · ${sel.length} chars`;
+        } else if (tipo === "errores") {
+          _claudeContexto = editor.getValue();
+          info.textContent = `🔍 Revisando errores — ${editor.lineCount()} líneas`;
+          claudeEnviarMensaje("Revisa este código en busca de errores, bugs o problemas potenciales. Sé específico con el número de línea cuando puedas.");
+          return;
+        } else if (tipo === "mejorar") {
+          _claudeContexto = editor.getValue();
+          info.textContent = `✨ Analizando mejoras — ${editor.lineCount()} líneas`;
+          claudeEnviarMensaje("Analiza este código y sugiere mejoras concretas: rendimiento, legibilidad, buenas prácticas o funcionalidades útiles.");
+          return;
+        }
+        document.getElementById("claudeInput").focus();
+      }
+
+      function claudeKeydown(e) {
+        // Enter sin Shift envía, Shift+Enter hace salto de línea
+        if (e.key === "Enter" && !e.shiftKey) {
+          e.preventDefault();
+          claudeEnviar();
+        }
+      }
+
+      function claudeEnviar() {
+        const input = document.getElementById("claudeInput");
+        const texto = input.value.trim();
+        if (!texto || _claudeStreaming) return;
+        input.value = "";
+        input.style.height = "auto";
+        claudeEnviarMensaje(texto);
+      }
+
+      async function claudeEnviarMensaje(pregunta) {
+        if (_claudeModelo === "gemini")    { await geminiEnviarMensaje(pregunta);   return; }
+        if (_claudeModelo === "deepseek")  { await deepseekEnviarMensaje(pregunta); return; }
+        if (_claudeStreaming) return;
+        _claudeStreaming = true;
+
+        // Ocultar estado vacío
+        document.getElementById("claudeVacio").style.display = "none";
+
+        // Deshabilitar botón enviar
+        document.getElementById("claudeEnviar").disabled = true;
+
+        // Construir mensaje de usuario con contexto si existe
+        let contenidoUsuario = pregunta;
+        if (_claudeContexto) {
+          contenidoUsuario =
+            `Contexto del código:\n\`\`\`\n${_claudeContexto}\n\`\`\`\n\nConsulta: ${pregunta}`;
+        }
+
+        // Agregar al historial interno (con contexto)
+        _claudeHistorial.push({ role: "user", content: contenidoUsuario });
+
+        // Mostrar burbuja del usuario (sin el bloque de código, solo la pregunta)
+        agregarBurbuja("usuario", pregunta);
+
+        // Burbuja de asistente vacía con cursor
+        const burbujaAsistente = agregarBurbuja("asistente", "", true);
+        let textoRespuesta = "";
+        let _lastRender = 0;
+
+        try {
+          const response = await fetch(cloudflareProxy, {
+            method: "POST",
+            headers: {
+              "Content-Type":      "application/json",
+              "x-api-key":         APIKeyAnthropic,
+              "anthropic-version": "2023-06-01",
+            },
+            body: JSON.stringify({
+              model:      "claude-sonnet-4-6",
+              max_tokens: 4096,
+              stream:     true,
+              system:     IARoll,             
+              messages:   _claudeHistorial
+            })
+          });
+
+          if (!response.ok) {
+            const err = await response.json().catch(() => ({}));
+            throw new Error(err.error?.message || `HTTP ${response.status}`);
+          }
+
+          const reader  = response.body.getReader();
+          const decoder = new TextDecoder();
+          let buffer    = "";
+
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            buffer += decoder.decode(value, { stream: true });
+            const lineas = buffer.split("\n");
+            buffer = lineas.pop(); // guardar línea incompleta
+
+            for (const linea of lineas) {
+              if (!linea.startsWith("data: ")) continue;
+              const dato = linea.slice(6).trim();
+              if (dato === "[DONE]") continue;
+              try {
+                const obj = JSON.parse(dato);
+                if (obj.type === "content_block_delta" && obj.delta?.type === "text_delta") {
+                  textoRespuesta += obj.delta.text;
+                  const _now = Date.now();
+                  if (_now - _lastRender > 100) {
+                    burbujaAsistente.value = textoRespuesta;
+                    const chat = document.getElementById("claudeChat");
+                    chat.scrollTop = chat.scrollHeight;
+                    _lastRender = _now;
+                  }
+                  burbujaAsistente.classList.add("claude-cursor");
+                }
+              } catch(e) { /* línea incompleta, ignorar */ }
+            }
+          }
+
+          burbujaAsistente.classList.remove("claude-cursor");
+                    
+          if (burbujaAsistente._btnCopiar) burbujaAsistente._btnCopiar.style.display = "inline-block";
+           
+          _claudeHistorial.push({ role: "assistant", content: textoRespuesta });      
+        
+        } catch(err) {
+          burbujaAsistente.classList.remove("claude-cursor");
+          if (burbujaAsistente._btnCopiar) burbujaAsistente._btnCopiar.style.display = "inline-block";
+           
+          burbujaAsistente.textContent = `❌ Error: ${err.message}`;
+          burbujaAsistente.style.borderColor = "#f38ba8";
+          // Revertir último mensaje del historial
+          _claudeHistorial.pop();
+        }
+
+        _claudeStreaming = false;
+        document.getElementById("claudeEnviar").disabled = false;
+        document.getElementById("claudeInput").focus();
+      }
+
+      /* ---- DeepSeek ---- */
+      async function deepseekEnviarMensaje(pregunta) {
+        if (_claudeStreaming) return;
+        _claudeStreaming = true;
+        document.getElementById("claudeVacio").style.display  = "none";
+        document.getElementById("claudeEnviar").disabled      = true;
+
+        let contenidoUsuario = pregunta;
+        if (_claudeContexto) {
+          contenidoUsuario = `Contexto del código:\n\`\`\`\n${_claudeContexto}\n\`\`\`\n\nConsulta: ${pregunta}`;
+        }
+
+        agregarBurbuja("usuario", pregunta);
+        const burbujaAsistente = agregarBurbuja("asistente", "", true);
+        let textoRespuesta = "";
+        let _lastRender = 0;
+
+        const mensajes = [
+          { role: "system", content: IARoll },   
+          ..._claudeHistorial,
+          { role: "user", content: contenidoUsuario }
+        ];
+
+        try {
+          const response = await fetch("https://api.deepseek.com/chat/completions", {
+            method: "POST",
+            headers: {
+              "Content-Type":  "application/json",
+              "Authorization": `Bearer ${APIKeyDeepSeek}`
+            },
+            body: JSON.stringify({
+              model:    "deepseek-chat",
+              stream:   true,
+              messages: mensajes
+            })
+          });
+
+          if (!response.ok) {
+            const err = await response.json().catch(() => ({}));
+            throw new Error(err.error?.message || `HTTP ${response.status}`);
+          }
+
+          const reader  = response.body.getReader();
+          const decoder = new TextDecoder();
+          let buffer    = "";
+
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            buffer += decoder.decode(value, { stream: true });
+            const lineas = buffer.split("\n");
+            buffer = lineas.pop();
+
+            for (const linea of lineas) {
+              if (!linea.startsWith("data: ")) continue;
+              const dato = linea.slice(6).trim();
+              if (dato === "[DONE]") continue;
+              try {
+                const obj   = JSON.parse(dato);
+                const texto = obj.choices?.[0]?.delta?.content || "";
+                if (texto) {
+                  textoRespuesta += texto;
+                  const _now = Date.now();
+                  if (_now - _lastRender > 100) {
+                    burbujaAsistente.value = textoRespuesta;
+                    document.getElementById("claudeChat").scrollTop = document.getElementById("claudeChat").scrollHeight;
+                    _lastRender = _now;
+                  }
+                  burbujaAsistente.classList.add("claude-cursor");
+                }
+              } catch(e) { /* ignorar */ }
+            }
+          }
+
+          burbujaAsistente.classList.remove("claude-cursor");
+          if (burbujaAsistente._btnCopiar) burbujaAsistente._btnCopiar.style.display = "inline-block";
+           
+          _claudeHistorial.push({ role: "user",      content: contenidoUsuario });
+          _claudeHistorial.push({ role: "assistant", content: textoRespuesta   });
+
+        } catch(err) {
+          burbujaAsistente.classList.remove("claude-cursor");
+          if (burbujaAsistente._btnCopiar) burbujaAsistente._btnCopiar.style.display = "inline-block";
+           
+          burbujaAsistente.textContent = `❌ Error: ${err.message}`;
+          burbujaAsistente.style.borderColor = "#f38ba8";
+        }
+
+        _claudeStreaming = false;
+        document.getElementById("claudeEnviar").disabled = false;
+        document.getElementById("claudeInput").focus();
+      }
+
+      /* ---- Gemini Flash ---- */
+      async function geminiEnviarMensaje(pregunta) {
+        if (_claudeStreaming) return;
+        _claudeStreaming = true;
+        document.getElementById("claudeVacio").style.display = "none";
+        document.getElementById("claudeEnviar").disabled = true;
+
+        let contenidoUsuario = pregunta;
+        if (_claudeContexto) {
+          contenidoUsuario = `Contexto del código:\n\`\`\`\n${_claudeContexto}\n\`\`\`\n\nConsulta: ${pregunta}`;
+        }
+
+        agregarBurbuja("usuario", pregunta);
+        const burbujaAsistente = agregarBurbuja("asistente", "", true);
+        let textoRespuesta = "";
+        let _lastRender = 0;
+
+        // Construir historial formato Gemini
+        const historialGemini = _claudeHistorial.map(m => ({
+          role: m.role === "assistant" ? "model" : "user",
+          parts: [{ text: m.content }]
+        }));
+        historialGemini.push({ role: "user", parts: [{ text: contenidoUsuario }] });
+
+        try {
+          const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:streamGenerateContent?alt=sse&key=${APIKeyGemini}`;
+
+          const response = await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              system_instruction: {
+                parts: [{ text: "Eres un asistente experto en desarrollo web integrado en un IDE llamado EditorVisorIDE. El usuario trabaja principalmente con HTML, CSS y JavaScript de archivo único. Responde de forma concisa y práctica. Cuando muestres código usa bloques de código markdown." }]
+              },
+              contents: historialGemini
+            })
+          });
+
+          if (!response.ok) {
+            const err = await response.json().catch(() => ({}));
+            throw new Error(err.error?.message || `HTTP ${response.status}`);
+          }
+
+          const reader  = response.body.getReader();
+          const decoder = new TextDecoder();
+          let buffer    = "";
+
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            buffer += decoder.decode(value, { stream: true });
+            const lineas = buffer.split("\n");
+            buffer = lineas.pop();
+
+            for (const linea of lineas) {
+              if (!linea.startsWith("data: ")) continue;
+              const dato = linea.slice(6).trim();
+              if (!dato || dato === "[DONE]") continue;
+              try {
+                const obj = JSON.parse(dato);
+                const texto = obj.candidates?.[0]?.content?.parts?.[0]?.text || "";
+                if (texto) {
+                  textoRespuesta += texto;
+                  const _now = Date.now();
+                  if (_now - _lastRender > 100) {
+                    burbujaAsistente.value = textoRespuesta;
+                    document.getElementById("claudeChat").scrollTop = document.getElementById("claudeChat").scrollHeight;
+                    _lastRender = _now;
+                  }
+                  burbujaAsistente.classList.add("claude-cursor");
+                }
+              } catch(e) { /* ignorar */ }
+            }
+          }
+
+          burbujaAsistente.classList.remove("claude-cursor");
+          if (burbujaAsistente._btnCopiar) burbujaAsistente._btnCopiar.style.display = "inline-block";
+           
+          _claudeHistorial.push({ role: "user",      content: contenidoUsuario });
+          _claudeHistorial.push({ role: "assistant", content: textoRespuesta   });
+
+        } catch(err) {
+          burbujaAsistente.classList.remove("claude-cursor");
+          if (burbujaAsistente._btnCopiar) burbujaAsistente._btnCopiar.style.display = "inline-block";
+           
+          burbujaAsistente.textContent = `❌ Error: ${err.message}`;
+          burbujaAsistente.style.borderColor = "#f38ba8";
+        }
+
+        _claudeStreaming = false;
+        document.getElementById("claudeEnviar").disabled = false;
+        document.getElementById("claudeInput").focus();
+      }
+
+      function agregarBurbuja(rol, texto, vacia = false) {
+        const chat = document.getElementById("claudeChat");
+
+        const msg = document.createElement("div");
+        msg.className = `claude-msg ${rol}`;
+
+        const label = document.createElement("div");
+        label.className = "claude-msg-label";
+        label.textContent = rol === "usuario" ? "Tú" : "Claude";
+
+        const esAsistente = rol === "asistente";
+        const burbuja = esAsistente ? document.createElement("textarea") : document.createElement("div");
+        burbuja.className = "claude-msg-burbuja";
+        if (esAsistente) {
+          burbuja.style.cssText = `
+            width:100%; min-height:60px; resize:vertical;
+            background:#1e1e2e; color:#cdd6f4;
+            border:1px solid #cba6f7; border-radius:8px;
+            border-bottom-left-radius:2px;
+            padding:8px 12px; font-family:'JetBrains Mono',monospace;
+            font-size:12px; line-height:1.6; outline:none;
+            box-sizing:border-box; field-sizing:content;
+          `;
+          if (!vacia) burbuja.value = texto;
+        } else {
+          if (!vacia) burbuja.textContent = texto;
+        }
+
+        msg.appendChild(label);
+        msg.appendChild(burbuja);
+
+        // Botón copiar para respuestas del asistente
+        if (rol === "asistente") {
+          const btnCopiar = document.createElement("button");
+          btnCopiar.textContent = "📋";
+          btnCopiar.title = "Copiar respuesta";
+          btnCopiar.style.cssText = `
+            background:none; border:1px solid #45475a; border-radius:4px;
+            color:#6c7086; font-size:10px; padding:2px 6px; margin-top:4px;
+            cursor:pointer; align-self:flex-start; display:${vacia ? "none" : "inline-block"};
+            transition:color .15s, border-color .15s;
+          `;
+          btnCopiar.onmouseenter = () => { btnCopiar.style.color="#cba6f7"; btnCopiar.style.borderColor="#cba6f7"; };
+          btnCopiar.onmouseleave = () => { btnCopiar.style.color="#6c7086"; btnCopiar.style.borderColor="#45475a"; };
+          btnCopiar.onclick = () => {
+            navigator.clipboard.writeText(burbuja.value || burbuja.textContent)
+              .then(() => { btnCopiar.textContent="✅"; setTimeout(()=>btnCopiar.textContent="📋",1500); })
+              .catch(()=>{});
+          };
+          burbuja._btnCopiar = btnCopiar; // referencia para mostrarlo post-stream
+          msg.appendChild(btnCopiar);
+
+           
+        }
+
+        chat.appendChild(msg);
+        chat.scrollTop = chat.scrollHeight;
+
+        return burbuja;
+      }
+
+
+
+      /* ============================================================
+         HISTORIAL EN CLOUDFLARE KV
+      ============================================================ */
+     
+       // ID único por dispositivo/navegador
+      function getHistorialId() {
+        let id = localStorage.getItem('_ide_historial_id');
+        if (!id) {
+          id = 'ide_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+          localStorage.setItem('_ide_historial_id', id);
+        }
+        return id;
+      }
+
+      async function guardarHistorialKV() {
+        if (_claudeHistorial.length === 0) {
+          mostrarEstado("⚠️ Historial vacío");
+          return;
+        }
+        try {
+          const resp = await fetch(`${KV_BASE}/kv-save`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id: getHistorialId(), data: _claudeHistorial })
+          });
+          const texto = await resp.text();
+          if (resp.ok) {
+            mostrarEstado("☁️ Historial guardado ✓");
+          } else {
+            mostrarEstado("❌ KV error: " + texto.slice(0, 80));
+          }
+        } catch(e) {
+          mostrarEstado("❌ Fetch error: " + e.message);
+        }
+      }
+
+      async function cargarHistorialKV() {
+        try {
+          const resp = await fetch(`${KV_BASE}/kv-load?id=${getHistorialId()}`);
+          const data = await resp.json();
+          if (Array.isArray(data) && data.length > 0) {
+            _claudeHistorial = data;
+            // Reconstruir burbujas en el chat
+            const chat = document.getElementById("claudeChat");
+            chat.innerHTML = "";
+            data.forEach(m => {
+              if (m.role === "user") {
+                // Mostrar solo la pregunta sin el bloque de contexto
+                const texto = m.content.includes("Consulta:") 
+                ? m.content.split("Consulta:").pop().trim()
+                : m.content;
+                agregarBurbuja("usuario", texto);
+              } else {
+                agregarBurbuja("asistente", m.content);
+              }
+            });
+            mostrarEstado(`☁️ Historial cargado — ${data.length} mensajes`);
+          } else {
+            mostrarEstado("☁️ Sin historial guardado");
+          }
+        } catch(e) {
+          mostrarEstado("⚠️ Error al cargar historial");
+        }
+      }
+
+      async function eliminarHistorialKV() {
+        try {
+          await fetch(`${KV_BASE}/kv-delete?id=${getHistorialId()}`);
+        } catch(e) { /* silencioso */ }
+      }
+
+
+      function claudeLimpiar() {
+        _claudeHistorial = [];
+        _claudeContexto  = "";
+        eliminarHistorialKV();
+        const chat = document.getElementById("claudeChat");
+        chat.innerHTML = `<div class="claude-vacio" id="claudeVacio">
+          <div class="icon">🤖</div>
+          <p>Selecciona un contexto o escribe<br>tu consulta directamente</p>
+      </div>`;
+        document.getElementById("claudeContextoInfo").textContent = "Sin contexto cargado";
+      }
+
+
       /* ============================================================
          PANEL ÁRBOL DE FUNCIONES
       ============================================================ */
@@ -1570,6 +2550,7 @@
       });
 
       document.addEventListener("DOMContentLoaded", () => {
+        cargarConfig();
         setEditorNormal();
         setListBackup();
         editor.setValue(htmlPorDefecto());
