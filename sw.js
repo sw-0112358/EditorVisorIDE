@@ -1,6 +1,6 @@
 // 🔧 Configuración: cambia solo estas dos constantes
 const PROJECT_NAME = "swIDE"; // nombre del proyecto
-const VERSION = "v9";                 // versión actual
+const VERSION = "v10";                 // versión actual
 
 const CACHE_NAME = `${PROJECT_NAME}-cache-${VERSION}`;
 const FILES_TO_CACHE = [

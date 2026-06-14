@@ -810,8 +810,8 @@
         line-height: 1.6;
       }
 
-      
-      
+
+
       /* ============================================================
       MODAL CONFIGURACIÓN
       ============================================================ */
@@ -868,7 +868,7 @@
       }
       #configBody input:focus,
       #configBody textarea:focus { border-color:#cba6f7; box-shadow:none; }
-      
+
 
     </style>
   </head>
@@ -1012,7 +1012,7 @@
 
     <div id="autosaveMsg">Guardado ✔️</div>
 
-     
+
     <!-- MODAL CONFIGURACIÓN -->
     <div class="modalClaude" id="modalConfig">
       <div id="configBox">
@@ -1063,11 +1063,11 @@
 
       </div>
     </div>
-    
-    
+
+
     <!-- MODAL CLAUDE IA -->
     <div class="modalClaude" id="modalClaude1">
-    
+
       <div id="claudeBox">
 
         <div id="claudeHeader">
@@ -1116,7 +1116,7 @@
 
     <script>
 
-     
+
       const IARollDefault = `Eres un asistente experto en desarrollo web integrado en un IDE llamado EditorVisorIDE. El usuario trabaja principalmente con HTML, CSS y JavaScript de archivo único. Responde de forma concisa y práctica.
 
 Cuando muestres código usa los siguientes formatos de bloque según el lenguaje:
@@ -1156,7 +1156,7 @@ REGLAS IMPORTANTES para bloques JS:
         document.getElementById("configEstado").textContent = "↩️ Prompt restablecido — presiona Guardar para aplicar";
         document.getElementById("configEstado").style.color = "#fab387";
       }
-      
+
       function cargarConfig() {
         try {
           const cfg = JSON.parse(localStorage.getItem(CFG_KEY) || '{}');
@@ -1222,8 +1222,8 @@ REGLAS IMPORTANTES para bloques JS:
         document.getElementById("configEstado").textContent = "🗑️ Configuración borrada";
         document.getElementById("configEstado").style.color = "#6c7086";
       }
-     
-      
+
+
       /* ============================================================
          CAMBIO DE TEMA
       ============================================================ */
@@ -1838,12 +1838,12 @@ REGLAS IMPORTANTES para bloques JS:
       /* ============================================================
          CLAUDE IA — API ANTHROPIC
       ============================================================ */
-      
+
       let _claudeHistorial  = []; // { role, content }
       let _claudeContexto   = ""; // código cargado como contexto
       let _claudeStreaming   = false;
       let _claudeModelo     = "deepseek"; // "claude" | "gemini" | "deepseek"
-    
+
       function claudeCambiarModelo(modelo) {
         _claudeModelo = modelo;
         // El historial y contexto se conservan al cambiar de modelo
@@ -1925,249 +1925,111 @@ REGLAS IMPORTANTES para bloques JS:
         claudeEnviarMensaje(texto);
       }
 
-      async function claudeEnviarMensaje(pregunta) {
-        if (_claudeModelo === "gemini")    { await geminiEnviarMensaje(pregunta);   return; }
-        if (_claudeModelo === "deepseek")  { await deepseekEnviarMensaje(pregunta); return; }
+
+      /* ---- Función genérica de stream ---- */
+      async function streamIA(pregunta) {
         if (_claudeStreaming) return;
         _claudeStreaming = true;
 
-        // Ocultar estado vacío
         document.getElementById("claudeVacio").style.display = "none";
-
-        // Deshabilitar botón enviar
         document.getElementById("claudeEnviar").disabled = true;
 
-        // Construir mensaje de usuario con contexto si existe
         let contenidoUsuario = pregunta;
         if (_claudeContexto) {
-          contenidoUsuario =
-            `Contexto del código:\n\`\`\`\n${_claudeContexto}\n\`\`\`\n\nConsulta: ${pregunta}`;
+          contenidoUsuario = `Contexto del código:\n\`\`\`\n${_claudeContexto}\n\`\`\`\n\nConsulta: ${pregunta}`;
         }
 
-        // Agregar al historial interno (con contexto)
+        agregarBurbuja("usuario", pregunta);
+        const burbujaAsistente = agregarBurbuja("asistente", "", true);
+        let textoRespuesta = "";
+        let _lastRender    = 0;
+
+        const actualizarBurbuja = () => {
+          burbujaAsistente.classList.add("claude-cursor");
+          const _now = Date.now();
+          if (_now - _lastRender > 100) {
+            burbujaAsistente.value = textoRespuesta;
+            document.getElementById("claudeChat").scrollTop =
+              document.getElementById("claudeChat").scrollHeight;
+            _lastRender = _now;
+          }
+        };
+
+        const finalizarStream = (exito) => {
+          burbujaAsistente.classList.remove("claude-cursor");
+          // Actualización final con texto completo
+          burbujaAsistente.value = textoRespuesta;
+          if (burbujaAsistente._btnCopiar) burbujaAsistente._btnCopiar.style.display = "inline-block";
+          if (burbujaAsistente._btnSmart)  burbujaAsistente._btnSmart.style.display  = "inline-block";
+          _claudeStreaming = false;
+          document.getElementById("claudeEnviar").disabled = false;
+          document.getElementById("claudeInput").focus();
+        };
+
+        try {
+          // ── Construir request según modelo ──
+          let fetchUrl, fetchOpts, parsearDelta;
+
+          // Añadir mensaje usuario al historial UNA SOLA VEZ para todos los modelos
         _claudeHistorial.push({ role: "user", content: contenidoUsuario });
 
-        // Mostrar burbuja del usuario (sin el bloque de código, solo la pregunta)
-        agregarBurbuja("usuario", pregunta);
-
-        // Burbuja de asistente vacía con cursor
-        const burbujaAsistente = agregarBurbuja("asistente", "", true);
-        let textoRespuesta = "";
-        let _lastRender = 0;
-
-        try {
-          const response = await fetch(cloudflareProxy, {
-            method: "POST",
-            headers: {
-              "Content-Type":      "application/json",
-              "x-api-key":         APIKeyAnthropic,
-              "anthropic-version": "2023-06-01",
-            },
-            body: JSON.stringify({
-              model:      "claude-sonnet-4-6",
-              max_tokens: 4096,
-              stream:     true,
-              system:     IARoll,             
-              messages:   _claudeHistorial
-            })
-          });
-
-          if (!response.ok) {
-            const err = await response.json().catch(() => ({}));
-            throw new Error(err.error?.message || `HTTP ${response.status}`);
-          }
-
-          const reader  = response.body.getReader();
-          const decoder = new TextDecoder();
-          let buffer    = "";
-
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-
-            buffer += decoder.decode(value, { stream: true });
-            const lineas = buffer.split("\n");
-            buffer = lineas.pop(); // guardar línea incompleta
-
-            for (const linea of lineas) {
-              if (!linea.startsWith("data: ")) continue;
-              const dato = linea.slice(6).trim();
-              if (dato === "[DONE]") continue;
-              try {
-                const obj = JSON.parse(dato);
-                if (obj.type === "content_block_delta" && obj.delta?.type === "text_delta") {
-                  textoRespuesta += obj.delta.text;
-                  const _now = Date.now();
-                  if (_now - _lastRender > 100) {
-                    burbujaAsistente.value = textoRespuesta;
-                    const chat = document.getElementById("claudeChat");
-                    chat.scrollTop = chat.scrollHeight;
-                    _lastRender = _now;
-                  }
-                  burbujaAsistente.classList.add("claude-cursor");
-                }
-              } catch(e) { /* línea incompleta, ignorar */ }
-            }
-          }
-
-          burbujaAsistente.classList.remove("claude-cursor");
-                    
-          if (burbujaAsistente._btnCopiar) burbujaAsistente._btnCopiar.style.display = "inline-block";
-          if (burbujaAsistente._btnSmart)  burbujaAsistente._btnSmart.style.display  = "inline-block";
-           
-          _claudeHistorial.push({ role: "assistant", content: textoRespuesta });      
-        
-        } catch(err) {
-          burbujaAsistente.classList.remove("claude-cursor");
-          if (burbujaAsistente._btnCopiar) burbujaAsistente._btnCopiar.style.display = "inline-block";
-          if (burbujaAsistente._btnSmart)  burbujaAsistente._btnSmart.style.display  = "inline-block";
-           
-          burbujaAsistente.textContent = `❌ Error: ${err.message}`;
-          burbujaAsistente.style.borderColor = "#f38ba8";
-          // Revertir último mensaje del historial
-          _claudeHistorial.pop();
-        }
-
-        _claudeStreaming = false;
-        document.getElementById("claudeEnviar").disabled = false;
-        document.getElementById("claudeInput").focus();
-      }
-
-      /* ---- DeepSeek ---- */
-      async function deepseekEnviarMensaje(pregunta) {
-        if (_claudeStreaming) return;
-        _claudeStreaming = true;
-        document.getElementById("claudeVacio").style.display  = "none";
-        document.getElementById("claudeEnviar").disabled      = true;
-
-        let contenidoUsuario = pregunta;
-        if (_claudeContexto) {
-          contenidoUsuario = `Contexto del código:\n\`\`\`\n${_claudeContexto}\n\`\`\`\n\nConsulta: ${pregunta}`;
-        }
-
-        agregarBurbuja("usuario", pregunta);
-        const burbujaAsistente = agregarBurbuja("asistente", "", true);
-        let textoRespuesta = "";
-        let _lastRender = 0;
-
-        const instruccionFormato = `\n\n[FORMATO OBLIGATORIO: Usa SIEMPRE <!-- js --> ... <!-- fin --> para JS, <!-- html --> ... <!-- fin --> para HTML, <!-- css --> ... <!-- fin --> para CSS. Para funciones JS usa <!-- js inicio funcion --> y <!-- js fin funcion --> dentro del bloque. Para variables globales usa <!-- js inicio variable gobales --> y <!-- js fin variables -->. NUNCA uses comillas triples ni bloques markdown.]`;
-
-        const mensajes = [
-          { role: "system", content: IARoll },   
-          ..._claudeHistorial,
-          { role: "user", content: contenidoUsuario + instruccionFormato }
-        ];
-
-        try {
-          const response = await fetch("https://api.deepseek.com/chat/completions", {
-            method: "POST",
-            headers: {
-              "Content-Type":  "application/json",
-              "Authorization": `Bearer ${APIKeyDeepSeek}`
-            },
-            body: JSON.stringify({
-              model:    "deepseek-chat",
-              stream:   true,
-              messages: mensajes
-            })
-          });
-
-          if (!response.ok) {
-            const err = await response.json().catch(() => ({}));
-            throw new Error(err.error?.message || `HTTP ${response.status}`);
-          }
-
-          const reader  = response.body.getReader();
-          const decoder = new TextDecoder();
-          let buffer    = "";
-
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            buffer += decoder.decode(value, { stream: true });
-            const lineas = buffer.split("\n");
-            buffer = lineas.pop();
-
-            for (const linea of lineas) {
-              if (!linea.startsWith("data: ")) continue;
-              const dato = linea.slice(6).trim();
-              if (dato === "[DONE]") continue;
-              try {
-                const obj   = JSON.parse(dato);
-                const texto = obj.choices?.[0]?.delta?.content || "";
-                if (texto) {
-                  textoRespuesta += texto;
-                  const _now = Date.now();
-                  if (_now - _lastRender > 100) {
-                    burbujaAsistente.value = textoRespuesta;
-                    document.getElementById("claudeChat").scrollTop = document.getElementById("claudeChat").scrollHeight;
-                    _lastRender = _now;
-                  }
-                  burbujaAsistente.classList.add("claude-cursor");
-                }
-              } catch(e) { /* ignorar */ }
-            }
-          }
-
-          burbujaAsistente.classList.remove("claude-cursor");
-          if (burbujaAsistente._btnCopiar) burbujaAsistente._btnCopiar.style.display = "inline-block";
-          if (burbujaAsistente._btnSmart)  burbujaAsistente._btnSmart.style.display  = "inline-block";
-           
-          _claudeHistorial.push({ role: "user",      content: contenidoUsuario });
-          _claudeHistorial.push({ role: "assistant", content: textoRespuesta   });
-
-        } catch(err) {
-          burbujaAsistente.classList.remove("claude-cursor");
-          if (burbujaAsistente._btnCopiar) burbujaAsistente._btnCopiar.style.display = "inline-block";
-          if (burbujaAsistente._btnSmart)  burbujaAsistente._btnSmart.style.display  = "inline-block";
-           
-          burbujaAsistente.textContent = `❌ Error: ${err.message}`;
-          burbujaAsistente.style.borderColor = "#f38ba8";
-        }
-
-        _claudeStreaming = false;
-        document.getElementById("claudeEnviar").disabled = false;
-        document.getElementById("claudeInput").focus();
-      }
-
-      /* ---- Gemini Flash ---- */
-      async function geminiEnviarMensaje(pregunta) {
-        if (_claudeStreaming) return;
-        _claudeStreaming = true;
-        document.getElementById("claudeVacio").style.display = "none";
-        document.getElementById("claudeEnviar").disabled = true;
-
-        let contenidoUsuario = pregunta;
-        if (_claudeContexto) {
-          contenidoUsuario = `Contexto del código:\n\`\`\`\n${_claudeContexto}\n\`\`\`\n\nConsulta: ${pregunta}`;
-        }
-
-        agregarBurbuja("usuario", pregunta);
-        const burbujaAsistente = agregarBurbuja("asistente", "", true);
-        let textoRespuesta = "";
-        let _lastRender = 0;
-
-        // Construir historial formato Gemini
-        const historialGemini = _claudeHistorial.map(m => ({
-          role: m.role === "assistant" ? "model" : "user",
-          parts: [{ text: m.content }]
-        }));
-        historialGemini.push({ role: "user", parts: [{ text: contenidoUsuario }] });
-
-        try {
-          const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:streamGenerateContent?alt=sse&key=${APIKeyGemini}`;
-
-          const response = await fetch(url, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              system_instruction: {
-                parts: [{ text: "Eres un asistente experto en desarrollo web integrado en un IDE llamado EditorVisorIDE. El usuario trabaja principalmente con HTML, CSS y JavaScript de archivo único. Responde de forma concisa y práctica. Cuando muestres código usa bloques de código markdown." }]
+        if (_claudeModelo === "claude") {
+            fetchUrl  = cloudflareProxy;
+            fetchOpts = {
+              method: "POST",
+              headers: {
+                "Content-Type":      "application/json",
+                "x-api-key":         APIKeyAnthropic,
+                "anthropic-version": "2023-06-01",
               },
-              contents: historialGemini
-            })
-          });
+              body: JSON.stringify({
+                model: "claude-sonnet-4-6", max_tokens: 4096, stream: true,
+                system: IARoll, messages: _claudeHistorial
+              })
+            };
+            parsearDelta = (obj) => {
+              if (obj.type === "content_block_delta" && obj.delta?.type === "text_delta")
+                return obj.delta.text;
+              return "";
+            };
 
+          } else if (_claudeModelo === "deepseek") {
+            const instruccionFormato = `\n\n[FORMATO OBLIGATORIO: Usa SIEMPRE <!-- js --> ... <!-- fin --> para JS, <!-- html --> ... <!-- fin --> para HTML, <!-- css --> ... <!-- fin --> para CSS. Para funciones JS usa <!-- js inicio funcion --> y <!-- js fin funcion --> dentro del bloque. Para variables globales usa <!-- js inicio variable gobales --> y <!-- js fin variables -->. NUNCA uses comillas triples ni bloques markdown.]`;
+            // Construir mensajes desde historial, pero el último user lleva la instrucción
+            const historialSinUltimo = _claudeHistorial.slice(0, -1);
+            const mensajes = [
+              { role: "system", content: IARoll },
+              ...historialSinUltimo,
+              { role: "user", content: contenidoUsuario + instruccionFormato }
+            ];
+            fetchUrl  = "https://api.deepseek.com/chat/completions";
+            fetchOpts = {
+              method: "POST",
+              headers: { "Content-Type": "application/json", "Authorization": `Bearer ${APIKeyDeepSeek}` },
+              body: JSON.stringify({ model: "deepseek-chat", stream: true, messages: mensajes })
+            };
+            parsearDelta = (obj) => obj.choices?.[0]?.delta?.content || "";
+
+          } else { // gemini
+            // El historial ya incluye el último mensaje user, convertir sin duplicar
+            const historialGemini = _claudeHistorial.map(m => ({
+              role: m.role === "assistant" ? "model" : "user",
+              parts: [{ text: m.content }]
+            }));
+            fetchUrl  = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:streamGenerateContent?alt=sse&key=${APIKeyGemini}`;
+            fetchOpts = {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                system_instruction: { parts: [{ text: IARoll }] },
+                contents: historialGemini
+              })
+            };
+            parsearDelta = (obj) => obj.candidates?.[0]?.content?.parts?.[0]?.text || "";
+          }
+
+          // ── Fetch y stream ──
+          const response = await fetch(fetchUrl, fetchOpts);
           if (!response.ok) {
             const err = await response.json().catch(() => ({}));
             throw new Error(err.error?.message || `HTTP ${response.status}`);
@@ -2189,42 +2051,34 @@ REGLAS IMPORTANTES para bloques JS:
               const dato = linea.slice(6).trim();
               if (!dato || dato === "[DONE]") continue;
               try {
-                const obj = JSON.parse(dato);
-                const texto = obj.candidates?.[0]?.content?.parts?.[0]?.text || "";
-                if (texto) {
-                  textoRespuesta += texto;
-                  const _now = Date.now();
-                  if (_now - _lastRender > 100) {
-                    burbujaAsistente.value = textoRespuesta;
-                    document.getElementById("claudeChat").scrollTop = document.getElementById("claudeChat").scrollHeight;
-                    _lastRender = _now;
-                  }
-                  burbujaAsistente.classList.add("claude-cursor");
-                }
+                const fragmento = parsearDelta(JSON.parse(dato));
+                if (fragmento) { textoRespuesta += fragmento; actualizarBurbuja(); }
               } catch(e) { /* ignorar */ }
             }
           }
 
-          burbujaAsistente.classList.remove("claude-cursor");
-          if (burbujaAsistente._btnCopiar) burbujaAsistente._btnCopiar.style.display = "inline-block";
-          if (burbujaAsistente._btnSmart)  burbujaAsistente._btnSmart.style.display  = "inline-block";
-           
-          _claudeHistorial.push({ role: "user",      content: contenidoUsuario });
-          _claudeHistorial.push({ role: "assistant", content: textoRespuesta   });
+          // ── Guardar respuesta en historial ──
+          _claudeHistorial.push({ role: "assistant", content: textoRespuesta });
+
+          finalizarStream(true);
 
         } catch(err) {
           burbujaAsistente.classList.remove("claude-cursor");
-          if (burbujaAsistente._btnCopiar) burbujaAsistente._btnCopiar.style.display = "inline-block";
-          if (burbujaAsistente._btnSmart)  burbujaAsistente._btnSmart.style.display  = "inline-block";
-           
           burbujaAsistente.textContent = `❌ Error: ${err.message}`;
           burbujaAsistente.style.borderColor = "#f38ba8";
+          if (burbujaAsistente._btnCopiar) burbujaAsistente._btnCopiar.style.display = "inline-block";
+          if (burbujaAsistente._btnSmart)  burbujaAsistente._btnSmart.style.display  = "inline-block";
+          _claudeHistorial.pop(); // revertir mensaje usuario
+          _claudeStreaming = false;
+          document.getElementById("claudeEnviar").disabled = false;
+          document.getElementById("claudeInput").focus();
         }
-
-        _claudeStreaming = false;
-        document.getElementById("claudeEnviar").disabled = false;
-        document.getElementById("claudeInput").focus();
       }
+
+      function claudeEnviarMensaje(pregunta)   { return streamIA(pregunta); }
+      function deepseekEnviarMensaje(pregunta) { return streamIA(pregunta); }
+      function geminiEnviarMensaje(pregunta)   { return streamIA(pregunta); }
+
 
       function agregarBurbuja(rol, texto, vacia = false) {
         const chat = document.getElementById("claudeChat");
@@ -2302,9 +2156,20 @@ REGLAS IMPORTANTES para bloques JS:
             smartDiv.className = "smart-render";
             smartDiv.style.cssText = "margin-top:8px;display:flex;flex-direction:column;gap:6px;";
 
+            // Normalizar variaciones del modelo (espacios extra, mayúsculas)
+            const textoNorm = texto
+              .replace(/<!--\s*js\s*-->/gi,   '<!-- js -->')
+              .replace(/<!--\s*html\s*-->/gi, '<!-- html -->')
+              .replace(/<!--\s*css\s*-->/gi,  '<!-- css -->')
+              .replace(/<!--\s*fin\s*-->/gi,  '<!-- fin -->')
+              .replace(/<!--\s*js\s+inicio\s+funcion\s*-->/gi,          '<!-- js inicio funcion -->')
+              .replace(/<!--\s*js\s+fin\s+funcion\s*-->/gi,             '<!-- js fin funcion -->')
+              .replace(/<!--\s*js\s+inicio\s+variable[s]?\s+gobales?\s*-->/gi, '<!-- js inicio variable gobales -->')
+              .replace(/<!--\s*js\s+fin\s+variables?\s*-->/gi,          '<!-- js fin variables -->');
+
             // Procesar bloques <!-- lang --> ... <!-- fin -->
             const RE_BLOQUE = /(<!-- (?:js|html|css) -->[\s\S]*?<!-- fin -->)/g;
-            const partes = texto.split(RE_BLOQUE);
+            const partes = textoNorm.split(RE_BLOQUE);
             partes.forEach(parte => {
               const matchLang = parte.match(/^<!-- (js|html|css) -->/);
               if (matchLang) {
@@ -2312,7 +2177,7 @@ REGLAS IMPORTANTES para bloques JS:
                 const lineas         = parte.split("\n");
                 const contenidoTotal = lineas.slice(1, -1).join("\n");
 
-                // Buscar delimitadores internos (solo en JS)
+                // Buscar delimitadores internos
                 const RE_ALL = /<!-- js inicio (funcion|variable gobales) -->([\s\S]*?)<!-- js fin (?:funcion|variables) -->/g;
                 const secciones = [];
                 let m;
@@ -2322,8 +2187,8 @@ REGLAS IMPORTANTES para bloques JS:
                 }
 
                 const items = secciones.length > 0
-                  ? secciones
-                  : [{ tipo: lang, contenido: contenidoTotal.trim() }];
+                ? secciones
+                : [{ tipo: lang, contenido: contenidoTotal.trim() }];
 
                 items.forEach(sec => {
                   const wrap = document.createElement("div");
@@ -2377,8 +2242,8 @@ REGLAS IMPORTANTES para bloques JS:
       /* ============================================================
          HISTORIAL EN CLOUDFLARE KV
       ============================================================ */
-     
-       // ID único por dispositivo/navegador
+
+      // ID único por dispositivo/navegador
       function getHistorialId() {
         let id = localStorage.getItem('_ide_historial_id');
         if (!id) {
