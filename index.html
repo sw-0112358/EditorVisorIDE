@@ -1144,9 +1144,10 @@ REGLAS IMPORTANTES para bloques JS:
 - Para HTML y CSS puedes usar bloques markdown normales.`;
 
 
-      let cloudflareProxy = 'https://shiny-bread-e818.gx0112358.workers.dev/claude';
-      let KV_BASE         = 'https://shiny-bread-e818.gx0112358.workers.dev';
-      const CFG_KEY       = '_ide_config_v1';
+      const WORKER_KEY    = '_cf_worker_url';
+      const _WORKER_DEFAULT = 'https://shiny-bread-e818.gx0112358.workers.dev';
+      let KV_BASE         = localStorage.getItem(WORKER_KEY) || _WORKER_DEFAULT;
+      let cloudflareProxy = KV_BASE + '/claude';
 
       function PromptIA() {
         const custom = document.getElementById("cfg-iaroll")?.value?.trim();
@@ -1160,37 +1161,30 @@ REGLAS IMPORTANTES para bloques JS:
       }
 
       async function cargarConfig() {
-        // Primero cargar lo no sensible del localStorage (proxy, kv, iaroll)
-        try {
-          const local = JSON.parse(localStorage.getItem(CFG_KEY) || '{}');
-          if (local.proxy)  cloudflareProxy = local.proxy;
-          if (local.kv)     KV_BASE         = local.kv;
-        } catch(e) {}
+        // Leer Worker URL del localStorage
+        const workerUrl = localStorage.getItem(WORKER_KEY);
+        if (workerUrl) {
+          KV_BASE         = workerUrl;
+          cloudflareProxy = workerUrl + '/claude';
+        }
 
-        // Luego sincronizar con KV (solo actualiza proxy/kv/iaroll)
+        // Sincronizar iaroll desde KV
         try {
           const resp = await fetch(`${KV_BASE}/config-load?id=${getHistorialId()}`);
           const cfg  = await resp.json();
-          if (cfg && cfg.proxy)  cloudflareProxy = cfg.proxy;
-          if (cfg && cfg.kv)     KV_BASE         = cfg.kv;
-          // iaroll lo maneja PromptIA() directo del textarea
           if (cfg && cfg.iaroll) {
             const el = document.getElementById("cfg-iaroll");
             if (el) el.value = cfg.iaroll;
-          } 
-        } catch(e) { /* silencioso, usa caché local */ }
+          }
+        } catch(e) { /* silencioso */ }
       }
 
       async function abrirConfig() {
         document.querySelector(".menuFullPantalla").style.display = "none";
 
-        // Cargar lo no sensible del localStorage
-        try {
-          const local = JSON.parse(localStorage.getItem(CFG_KEY) || '{}');
-          document.getElementById("cfg-proxy").value  = local.proxy  || cloudflareProxy;
-          document.getElementById("cfg-kv").value     = local.kv     || KV_BASE;
-          document.getElementById("cfg-iaroll").value = local.iaroll || IARollDefault;
-        } catch(e) {}
+        // Cargar Worker URL del localStorage
+        document.getElementById("cfg-kv").value    = localStorage.getItem(WORKER_KEY) || KV_BASE;
+        document.getElementById("cfg-proxy").value = (localStorage.getItem(WORKER_KEY) || KV_BASE) + '/claude';
 
         // Limpiar campos de keys — nunca se muestran
         document.getElementById("cfg-anthropic").value = '';
@@ -1223,16 +1217,34 @@ REGLAS IMPORTANTES para bloques JS:
       }
 
       async function guardarConfig() {
-        const id = getHistorialId();
+        const id  = getHistorialId();
         const cfg = {
           id,
-          anthropic: document.getElementById("cfg-anthropic").value.trim(),
-          gemini:    document.getElementById("cfg-gemini").value.trim(),
-          deepseek:  document.getElementById("cfg-deepseek").value.trim(),
-          proxy:     document.getElementById("cfg-proxy").value.trim(),
-          kv:        document.getElementById("cfg-kv").value.trim(),
-          iaroll:    document.getElementById("cfg-iaroll").value.trim(),
+          proxy:  document.getElementById("cfg-proxy").value.trim(),
+          kv:     document.getElementById("cfg-kv").value.trim(),
+          iaroll: document.getElementById("cfg-iaroll").value.trim(),
         };
+
+        const anthropic = document.getElementById("cfg-anthropic").value.trim();
+        const gemini    = document.getElementById("cfg-gemini").value.trim();
+        const deepseek  = document.getElementById("cfg-deepseek").value.trim();
+        const hayKeys   = anthropic || gemini || deepseek;
+
+        if (!hayKeys) {
+          // Sin keys nuevas → solo guardar Worker URL en localStorage
+          localStorage.setItem(WORKER_KEY, cfg.kv);
+          KV_BASE         = cfg.kv;
+          cloudflareProxy = cfg.kv + '/claude';
+          document.getElementById("configEstado").textContent = "✅ Worker URL guardado localmente";
+          document.getElementById("configEstado").style.color = "#a6e3a1";
+          return;
+        }
+
+        // Hay keys nuevas → enviar a la nube
+        if (anthropic) cfg.anthropic = anthropic;
+        if (gemini)    cfg.gemini    = gemini;
+        if (deepseek)  cfg.deepseek  = deepseek;
+
         try {
           const resp = await fetch(`${KV_BASE}/config-save`, {
             method: "POST",
@@ -1240,13 +1252,10 @@ REGLAS IMPORTANTES para bloques JS:
             body: JSON.stringify(cfg)
           });
           if (resp.ok) {
-            // Solo guardar lo no sensible en localStorage como caché
-            localStorage.setItem(CFG_KEY, JSON.stringify({
-              proxy:  cfg.proxy,
-              kv:     cfg.kv,
-              iaroll: cfg.iaroll,
-            }));
-            cargarConfig();
+            localStorage.setItem(WORKER_KEY, cfg.kv);
+            KV_BASE         = cfg.kv;
+            cloudflareProxy = cfg.kv + '/claude';
+            await cargarConfig();
             document.getElementById("configEstado").textContent = "✅ Guardado en la nube";
             document.getElementById("configEstado").style.color = "#a6e3a1";
           } else {
@@ -1260,7 +1269,7 @@ REGLAS IMPORTANTES para bloques JS:
 
       async function limpiarConfig() {
         if (!confirm("¿Borrar toda la configuración?")) return;
-        localStorage.removeItem(CFG_KEY);
+        localStorage.removeItem(WORKER_KEY);
         try {
           await fetch(`${KV_BASE}/config-save`, {
             method: "POST",
