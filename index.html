@@ -540,120 +540,155 @@
 
 
       /* ============================================================
-      PANEL ÁRBOL DE FUNCIONES
+      PANEL ÁRBOL DE FUNCIONES — ESTILO MODERNO (como ⚙️)
       ============================================================ */
       #panelArbol {
         position: fixed;
-        top: 0;
-        left: -240px;
-        width: 230px;
-        height: 100vh;
-        background: var(--bg-gutter);
-        border-right: 2px solid var(--border-input);
+        top: 50%;
+        left: 20px;
+        transform: translateY(-50%);
+        width: 280px;
+        max-height: 80vh;
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        color: var(--color-menu-text);
+        border-radius: 16px;
+        border: 1px solid rgba(200, 200, 220, 0.5);
+        box-shadow: 
+          0 8px 32px rgba(0, 0, 0, 0.12),
+          0 2px 8px rgba(0, 0, 0, 0.06),
+          inset 0 1px 0 rgba(255, 255, 255, 0.8);
         z-index: 8888;
         display: flex;
         flex-direction: column;
-        transition: left 0.25s ease;
-        box-shadow: 3px 0 12px rgba(0,0,0,0.15);
+        transition: opacity 0.25s ease, transform 0.25s ease;
+        opacity: 0;
+        pointer-events: none;
+        font-family: 'JetBrains Mono', monospace;
       }
-      #panelArbol.abierto { left: 0; }
+      #panelArbol.abierto {
+        opacity: 1;
+        pointer-events: all;
+        transform: translateY(-50%) scale(1);
+      }
 
       #panelArbol-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 8px 10px;
-        background: var(--bg-menu);
-        border-bottom: 1px solid var(--border-input);
+        padding: 12px 14px 8px;
         flex-shrink: 0;
+        border-bottom: 1px solid rgba(200, 200, 220, 0.3);
       }
       #panelArbol-header span {
         font-family: 'JetBrains Mono', monospace;
-        font-size: 11px;
-        font-weight: bold;
-        color: var(--color-menu-text);
-        letter-spacing: 0.06em;
+        font-size: 13px;
+        font-weight: 700;
+        color: #333;
+        letter-spacing: 0.04em;
+      }
+      #panelArbol-header .bottonV2 {
+        color: #666;
+        font-size: 16px;
       }
 
       #panelArbol-scroll {
         flex: 1;
         overflow-y: auto;
-        padding: 6px 0;
+        padding: 4px 0;
       }
       #panelArbol-scroll::-webkit-scrollbar { width: 4px; }
       #panelArbol-scroll::-webkit-scrollbar-track { background: transparent; }
-      #panelArbol-scroll::-webkit-scrollbar-thumb { background: var(--fg-gutter); border-radius: 3px; }
+      #panelArbol-scroll::-webkit-scrollbar-thumb { background: rgba(0, 120, 215, 0.3); border-radius: 3px; }
 
       #panelArbol-buscar {
         font-family: 'JetBrains Mono', monospace;
-        font-size: 11px;
-        width: 100%;
-        padding: 5px 8px;
-        border: none;
-        border-bottom: 1px solid var(--border-input);
-        background: var(--bg-input);
-        color: var(--fg-input);
+        font-size: 12px;
+        width: calc(100% - 20px);
+        margin: 6px 10px;
+        padding: 7px 12px;
+        border: 1px solid rgba(200, 200, 220, 0.5);
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.8);
+        color: #333;
         outline: none;
         box-sizing: border-box;
         flex-shrink: 0;
+        transition: all 0.25s ease;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.03);
       }
-      #panelArbol-buscar:focus { border-bottom-color: var(--fold-color); }
+      #panelArbol-buscar:hover { border-color: rgba(0, 120, 215, 0.3); }
+      #panelArbol-buscar:focus {
+        border-color: rgba(0, 120, 215, 0.6);
+        box-shadow: 0 0 0 3px rgba(0, 120, 215, 0.1);
+        background: rgba(255, 255, 255, 0.95);
+      }
+      #panelArbol-buscar::placeholder { color: #999; font-size: 11px; }
 
       #panelArbol-count {
         font-family: 'JetBrains Mono', monospace;
         font-size: 10px;
-        color: var(--fg-gutter);
-        padding: 3px 10px;
-        border-bottom: 1px solid var(--border-input);
+        color: #888;
+        padding: 2px 14px 4px;
         flex-shrink: 0;
       }
 
       .arbol-fila {
         display: flex;
         align-items: center;
-        gap: 5px;
-        padding: 4px 10px;
+        gap: 6px;
+        padding: 5px 14px;
         cursor: pointer;
-        transition: background 0.12s;
+        transition: background 0.15s ease;
         font-family: 'JetBrains Mono', monospace;
-        font-size: 11px;
+        font-size: 12px;
         border-left: 3px solid transparent;
+        margin: 0 6px;
+        border-radius: 6px;
       }
-      .arbol-fila:hover { background: var(--bg-activeline); }
+      .arbol-fila:hover {
+        background: rgba(0, 120, 215, 0.06);
+        border-left-color: transparent;
+      }
       .arbol-fila.activa {
-        background: var(--bg-activeline);
-        border-left-color: var(--fold-color);
+        background: rgba(0, 120, 215, 0.1);
+        border-left-color: #0078d7;
       }
-      .arbol-fila.tipo-function { }
-      .arbol-fila.tipo-class    { font-weight: bold; }
-      .arbol-fila.tipo-const    { opacity: 0.85; }
+      .arbol-fila.tipo-function { color: #007bff; }
+      .arbol-fila.tipo-class    { color: #c05621; font-weight: 600; }
+      .arbol-fila.tipo-const    { color: #2e8b57; }
+      .arbol-fila.tipo-method   { color: #9a7010; font-style: italic; }
 
       .arbol-punto {
-        width: 7px;
-        height: 7px;
+        width: 6px;
+        height: 6px;
         border-radius: 50%;
         flex-shrink: 0;
+        display: none;
       }
       .arbol-nombre {
         flex: 1;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
-        color: var(--fg-editor);
       }
       .arbol-linea {
         font-size: 10px;
-        color: var(--fg-gutter);
+        color: #aaa;
         flex-shrink: 0;
-        min-width: 30px;
+        min-width: 34px;
         text-align: right;
+        background: rgba(0,0,0,0.03);
+        padding: 1px 5px;
+        border-radius: 4px;
       }
       .arbol-vacio {
         font-family: 'JetBrains Mono', monospace;
-        font-size: 11px;
-        color: var(--fg-gutter);
+        font-size: 12px;
+        color: #aaa;
         text-align: center;
-        padding: 20px 10px;
+        padding: 30px 10px;
         opacity: 0.6;
       }
 
@@ -1269,7 +1304,7 @@
     <script>
 
 
- const IARollDefault = `Eres Claude Sonnet 4.6, un asistente de IA experta en desarrollo web, integrada en un IDE llamado EditorVisorIDE. Te comunicas de forma concisa, práctica y amigable, con un tono profesional pero accesible.
+ const IARollDefault = `Eres Claude Sonnet 4.6, una asistente de IA experta en desarrollo web, integrada en un IDE llamado EditorVisorIDE. Te comunicas de forma concisa, práctica y amigable, con un tono profesional pero accesible.
 Tu especialidad es ayudar con HTML, CSS y JavaScript en archivo único. Siempre priorizas la claridad, eficiencia y buenas prácticas del código.
 Cuando muestres código, usa estos formatos de bloque según el lenguaje:
 
@@ -2997,6 +3032,8 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
       /* ---- Render del árbol ---- */
       function parsearYRenderArbol() {
         _todasFilas = parsearFunciones();
+        // Ordenar alfabéticamente (A-Z)
+        _todasFilas.sort((a, b) => a.nombre.localeCompare(b.nombre));
         filtrarArbol(document.getElementById("panelArbol-buscar").value || "");
       }
 
