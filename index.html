@@ -1227,7 +1227,8 @@ REGLAS IMPORTANTES para bloques JS:
 - Estos delimitadores van en su propia línea, DENTRO del bloque.
 - Nunca omitas los delimitadores en código JS.
 - Para HTML y CSS puedes usar bloques markdown normales.
-- Para indicar una Busqueda para reemplazar sigue las siguie el siguiente formato: **start** **Buscar** + código a buscar + **Reemplazar** + código nuevo + **end**
+- Para indicar una Busqueda para reemplazar sigue las siguie el siguiente formato: **start** **Buscar** + **Linea de inicio: ** + código a buscar + **Linea final: ** + **Reemplazar** + código nuevo + **end**
+
 `      
       ;
 
@@ -1247,13 +1248,12 @@ REGLAS IMPORTANTES para bloques JS:
       }
 
       async function cargarConfig() {
-        // Sincronizar iaroll desde KV
         try {
-          const resp = await fetch(`${KV_BASE}/config-load?id=${getHistorialId()}`);
-          const cfg  = await resp.json();
-          if (cfg && cfg.iaroll) {
+          const resp = await fetch(`${KV_BASE}/kv-load?id=${getConfigId()}`);
+          const data = await resp.json();
+          if (data && data.iaroll) {
             const el = document.getElementById("cfg-iaroll");
-            if (el) el.value = cfg.iaroll;
+            if (el) el.value = data.iaroll;
           }
         } catch(e) { /* silencioso */ }
       }
@@ -1272,17 +1272,17 @@ REGLAS IMPORTANTES para bloques JS:
 
         // Consultar al Worker qué keys están guardadas
         try {
-          const resp = await fetch(`${KV_BASE}/config-load?id=${getHistorialId()}`);
+          const resp = await fetch(`${KV_BASE}/kv-load?id=${getConfigId()}`);
           const cfg  = await resp.json();
           if (cfg) {
             document.getElementById("cfg-anthropic").placeholder =
-              cfg.tieneAnthropic ? "✅ Guardada en la nube — pega nueva para actualizar" : "sk-ant-api03-…";
+              cfg.anthropic  ? "✅ Guardada en la nube — pega nueva para actualizar" : "sk-ant-api03-…";
             document.getElementById("cfg-gemini").placeholder =
-              cfg.tieneGemini    ? "✅ Guardada en la nube — pega nueva para actualizar" : "AQ.Ab8…";
+              cfg.gemini     ? "✅ Guardada en la nube — pega nueva para actualizar" : "AQ.Ab8…";
             document.getElementById("cfg-deepseek").placeholder =
-              cfg.tieneDeepseek  ? "✅ Guardada en la nube — pega nueva para actualizar" : "sk-cfc…";
+              cfg.deepseek   ? "✅ Guardada en la nube — pega nueva para actualizar" : "sk-cfc…";
             document.getElementById("cfg-openrouter").placeholder =
-              cfg.tieneOpenrouter ? "✅ Guardada en la nube — pega nueva para actualizar" : "sk-or-…";
+              cfg.openrouter ? "✅ Guardada en la nube — pega nueva para actualizar" : "sk-or-…";
             if (cfg.iaroll) document.getElementById("cfg-iaroll").value = cfg.iaroll;
           }
         } catch(e) {}
@@ -1298,62 +1298,38 @@ REGLAS IMPORTANTES para bloques JS:
       }
 
       async function guardarConfig() {
-        const id  = getHistorialId();
-        const cfg = {
-          id,
-          proxy:  "",
-          kv:     document.getElementById("cfg-kv").value.trim(),
-          iaroll: document.getElementById("cfg-iaroll").value.trim(),
-        };
-
+        const kvVal      = document.getElementById("cfg-kv").value.trim();
+        const iaroll     = document.getElementById("cfg-iaroll").value.trim();
         const anthropic  = document.getElementById("cfg-anthropic").value.trim();
         const gemini     = document.getElementById("cfg-gemini").value.trim();
         const deepseek   = document.getElementById("cfg-deepseek").value.trim();
         const openrouter = document.getElementById("cfg-openrouter").value.trim();
-        const hayKeys    = anthropic || gemini || deepseek || openrouter;
 
-        if (!hayKeys) {
-          // Sin keys nuevas — guardar Worker URL local + prompt si cambió
-          localStorage.setItem(WORKER_KEY, cfg.kv);
-          KV_BASE = cfg.kv;
-          if (cfg.iaroll) {
-            // Subir solo el prompt al KV sin tocar las keys
-            try {
-              const resp = await fetch(`${KV_BASE}/config-save`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ id: getHistorialId(), iaroll: cfg.iaroll })
-              });
-              if (resp.ok) {
-                document.getElementById("configEstado").textContent = "✅ Prompt guardado en la nube";
-                document.getElementById("configEstado").style.color = "#a6e3a1";
-              } else throw new Error();
-            } catch(e) {
-              document.getElementById("configEstado").textContent = "✅ Worker URL guardado (prompt: error KV)";
-              document.getElementById("configEstado").style.color = "#fab387";
-            }
-          } else {
-            document.getElementById("configEstado").textContent = "✅ Worker URL guardado localmente";
-            document.getElementById("configEstado").style.color = "#a6e3a1";
-          }
-          return;
-        }
+        if (kvVal) { CF_WORKER = kvVal; KV_BASE = kvVal; localStorage.setItem(WORKER_KEY, kvVal); }
 
-        // Hay keys nuevas → enviar a la nube
-        if (anthropic) cfg.anthropic   = anthropic;
-        if (gemini)    cfg.gemini      = gemini;
-        if (deepseek)  cfg.deepseek    = deepseek;
-        if (openrouter) cfg.openrouter = openrouter;
+        // Leer config actual para merge — no perder keys existentes
+        let cfgActual = {};
+        try {
+          const respLoad = await fetch(`${KV_BASE}/kv-load?id=${getConfigId()}`);
+          cfgActual = (await respLoad.json()) || {};
+        } catch(e) {}
+
+        const cfgNueva = {
+          anthropic:  anthropic  || cfgActual.anthropic  || '',
+          gemini:     gemini     || cfgActual.gemini     || '',
+          deepseek:   deepseek   || cfgActual.deepseek   || '',
+          openrouter: openrouter || cfgActual.openrouter || '',
+          kv:         kvVal      || cfgActual.kv         || '',
+          iaroll:     iaroll     || cfgActual.iaroll     || '',
+        };
 
         try {
-          const resp = await fetch(`${KV_BASE}/config-save`, {
+          const resp = await fetch(`${KV_BASE}/kv-save`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(cfg)
+            body: JSON.stringify({ id: getConfigId(), data: cfgNueva })
           });
           if (resp.ok) {
-            localStorage.setItem(WORKER_KEY, cfg.kv);
-            KV_BASE         = cfg.kv;
             await cargarConfig();
             document.getElementById("configEstado").textContent = "✅ Guardado en la nube";
             document.getElementById("configEstado").style.color = "#a6e3a1";
@@ -1370,11 +1346,7 @@ REGLAS IMPORTANTES para bloques JS:
         if (!confirm("¿Borrar toda la configuración?")) return;
         localStorage.removeItem(WORKER_KEY);
         try {
-          await fetch(`${KV_BASE}/config-save`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ id: getHistorialId() }) // guarda vacío
-          });
+          await fetch(`${KV_BASE}/kv-delete?id=${getConfigId()}`);
         } catch(e) {}
         document.getElementById("cfg-anthropic").value = '';
         document.getElementById("cfg-gemini").value    = '';
@@ -2173,10 +2145,16 @@ REGLAS IMPORTANTES para bloques JS:
 
         let contenidoUsuario = pregunta;
         if (_claudeContexto) {
-          // Si el contexto era "todo el código", refrescar con la versión actual del editor
-          const codigoActual = editor.getValue();
-          const contextoFinal = (_claudeContexto === _claudeContextoTipo) ? codigoActual : _claudeContexto;
-          contenidoUsuario = `Contexto del código:\n\`\`\`\n${contextoFinal}\n\`\`\`\n\nConsulta: ${pregunta}`;
+          const codigoActual  = editor.getValue();
+          const esTodo        = _claudeContextoTipo === "todo";
+          let contextoFinal   = esTodo ? codigoActual : _claudeContexto;
+          // Agregar numeración de líneas cuando es código completo
+          if (esTodo) {
+            contextoFinal = contextoFinal.split('\n')
+              .map((l, i) => `${String(i+1).padStart(4,' ')} | ${l}`)
+              .join('\n');
+          }
+          contenidoUsuario = `Contexto del código${esTodo ? ' (con números de línea)' : ''}:\n\`\`\`\n${contextoFinal}\n\`\`\`\n\nConsulta: ${pregunta}`;
         }
 
         agregarBurbuja("usuario", pregunta);
@@ -2269,6 +2247,7 @@ REGLAS IMPORTANTES para bloques JS:
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               id:           getHistorialId(),
+              configId:     getConfigId(),
               modelo:       _claudeModelo,
               modeloGemini: "gemini-2.5-flash",
               modeloOR:     _modeloOR,
@@ -2499,19 +2478,24 @@ REGLAS IMPORTANTES para bloques JS:
             const RE_BLOQUE_START = /\*\*start\*\*[\s\S]*?\*\*end\*\*/gi;
             const bloques = texto.match(RE_BLOQUE_START) || [];
             bloques.forEach(bloque => {
-              // Extraer contenido del primer bloque de código (Buscar)
               const RE_CODE = /```[^\n]*\n([\s\S]*?)```/g;
               const codigos = [];
               let mc;
               while ((mc = RE_CODE.exec(bloque)) !== null) {
                 codigos.push(mc[1]);
               }
+
+              // Extraer líneas de inicio/fin si las incluye el agente
+              const mLineaB = bloque.match(/[Ll]ínea\s+de\s+inicio[:\s]+(\d+)/);
+              const mLineaF = bloque.match(/[Ll]ínea\s+final[:\s]+(\d+)/);
+              const lineaInicio = mLineaB ? parseInt(mLineaB[1]) : null;
+              const lineaFin    = mLineaF ? parseInt(mLineaF[1]) : null;
+
               if (codigos.length >= 2) {
-                pares.push({ busca: codigos[0], reemplaza: codigos[1] });
+                pares.push({ busca: codigos[0], reemplaza: codigos[1], lineaInicio, lineaFin });
               } else if (codigos.length === 1) {
-                // Solo un bloque — buscar Reemplazar como texto plano
-                const mR = bloque.match(/\*\*Reemplazar\*\*\s*([\s\S]*?)(?:\*\*end\*\*|$)/i);
-                if (mR) pares.push({ busca: codigos[0], reemplaza: mR[1].trim() });
+                const mR = bloque.match(/\*\*Reemplazar?\*\*\s*([\s\S]*?)(?:\*\*end\*\*|$)/i);
+                if (mR) pares.push({ busca: codigos[0], reemplaza: mR[1].trim(), lineaInicio, lineaFin });
               }
             });
 
@@ -2548,7 +2532,10 @@ REGLAS IMPORTANTES para bloques JS:
                 // Header con botón aplicar
                 const hdr = document.createElement("div");
                 hdr.style.cssText = "display:flex;justify-content:space-between;align-items:center;padding:5px 10px;background:#181825;font-size:10px;color:#6c7086;";
-                hdr.innerHTML = `<span>Par ${idx+1} de ${pares.length}</span>`;
+                const infoLinea = par.lineaInicio
+                  ? `<span style="color:#6c7086;font-size:9px;">Línea ${par.lineaInicio}${par.lineaFin ? '–'+par.lineaFin : ''}</span>`
+                  : '';
+                hdr.innerHTML = `<span style="display:flex;gap:8px;align-items:center;">Par ${idx+1} de ${pares.length} ${infoLinea}</span>`;
 
                 const btnAplicar = document.createElement("button");
                 btnAplicar.textContent = "⚡ Aplicar";
@@ -2564,6 +2551,13 @@ REGLAS IMPORTANTES para bloques JS:
                   }
                   const nuevo = contenido.split(buscarTexto).join(par.reemplaza.trim());
                   editor.setValue(nuevo);
+                  // Ir a la línea indicada por el agente
+                  if (par.lineaInicio) {
+                    const linea = Math.max(0, par.lineaInicio - 1);
+                    editor.setCursor({ line: linea, ch: 0 });
+                    editor.scrollIntoView({ line: linea, ch: 0 }, 120);
+                    editor.focus();
+                  }
                   btnAplicar.textContent = "✅ Aplicado";
                   btnAplicar.style.background = "#89b4fa";
                   setTimeout(() => { btnAplicar.textContent = "⚡ Aplicar"; btnAplicar.style.background = "#a6e3a1"; }, 2000);
@@ -2646,6 +2640,15 @@ REGLAS IMPORTANTES para bloques JS:
         if (!id) {
           id = 'ide_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
           localStorage.setItem('_ide_historial_id', id);
+        }
+        return id;
+      }
+
+      function getConfigId() {
+        let id = localStorage.getItem('_ide_config_id');
+        if (!id) {
+          id = 'cfg_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+          localStorage.setItem('_ide_config_id', id);
         }
         return id;
       }
