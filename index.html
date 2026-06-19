@@ -1188,6 +1188,10 @@
         </div>
 
         <div id="claudeInputBar">
+          <input type="file" id="claude-file-input" accept=".html,.js,.css,.json,.txt" style="display:none" onchange="claudeAdjuntarArchivo(this)">
+          <button id="claude-btn-adjuntar" onclick="document.getElementById('claude-file-input').click()"
+                  style="background:none;border:1px solid #e2e5ea;border-radius:8px;padding:6px 9px;font-size:15px;cursor:pointer;flex-shrink:0;color:#4a5060;transition:border-color .15s,color .15s;"
+                  title="Adjuntar archivo (.html .js .css .json .txt)">📎</button>
           <textarea id="claudeInput" placeholder="Escribe tu consulta…" rows="1"
                     onkeydown="claudeKeydown(event)"
                     oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'"></textarea>
@@ -2011,6 +2015,47 @@ Reglas importantes:
       let _claudeHistorial  = []; // { role, content }
       let _claudeContexto     = ""; // código cargado como contexto
       let _claudeContextoTipo = ""; // "todo" | "seleccion" | ""
+      let _claudeArchivo      = null; // { nombre, contenido } archivo adjunto
+
+      function claudeAdjuntarArchivo(input) {
+        const file = input.files[0];
+        if (!file) return;
+        const MAX_KB = 200;
+        if (file.size > MAX_KB * 1024) {
+          mostrarEstado(`⚠️ Archivo muy grande (máx ${MAX_KB}KB)`);
+          input.value = '';
+          return;
+        }
+        const reader = new FileReader();
+        reader.onload = e => {
+          _claudeArchivo = { nombre: file.name, contenido: e.target.result };
+          const btn = document.getElementById('claude-btn-adjuntar');
+          btn.textContent = '📄';
+          btn.title = `Adjunto: ${file.name} — clic para quitar`;
+          btn.style.color = '#3b6ef8';
+          btn.style.borderColor = '#3b6ef8';
+          btn.onclick = () => {
+            _claudeArchivo = null;
+            btn.textContent = '📎';
+            btn.title = 'Adjuntar archivo (.html .js .css .json .txt)';
+            btn.style.color = '#4a5060';
+            btn.style.borderColor = '#e2e5ea';
+            btn.onclick = () => document.getElementById('claude-file-input').click();
+            input.value = '';
+          };
+          mostrarEstado(`📄 ${file.name} adjunto`);
+        };
+        reader.readAsText(file, 'UTF-8');
+        input.value = '';
+      }
+
+      function truncarHistorial(historial, maxMensajes = 20) {
+        // Mantener últimos 20 items (10 intercambios usuario/asistente)
+        if (historial.length > maxMensajes) {
+          return historial.slice(historial.length - maxMensajes);
+        }
+        return historial;
+      }
       let _claudeStreaming   = false;
       let _claudeModelo     = "deepseek";
       let _modeloOR         = "qwen/qwen3-235b-a22b:free";
@@ -2094,11 +2139,11 @@ Reglas importantes:
       function cerrarClaude() {
         document.getElementById("modalClaude1").classList.remove("visible");
       }
-      
+
       function claudeAccionContexto(val) {
         if (val) claudeContexto(val);
       }
-      
+
       function claudeAccionHistorial(val) {
         if (val === 'guardar') guardarHistorialKV();
         else if (val === 'cargar') cargarHistorialKV();
@@ -2163,18 +2208,36 @@ Reglas importantes:
         document.getElementById("claudeEnviar").disabled = true;
 
         let contenidoUsuario = pregunta;
+
+        // Incluir archivo adjunto si hay uno
+        if (_claudeArchivo) {
+          const ext = _claudeArchivo.nombre.split('.').pop().toLowerCase();
+          contenidoUsuario += `\n\nArchivo adjunto: ${_claudeArchivo.nombre}\n\`\`\`${ext}\n${_claudeArchivo.contenido}\n\`\`\``;
+          // Limpiar adjunto tras enviar
+          _claudeArchivo = null;
+          const btn = document.getElementById('claude-btn-adjuntar');
+          btn.textContent = '📎';
+          btn.title = 'Adjuntar archivo (.html .js .css .json .txt)';
+          btn.style.color = '#4a5060';
+          btn.style.borderColor = '#e2e5ea';
+          btn.onclick = () => document.getElementById('claude-file-input').click();
+        }
+
         if (_claudeContexto) {
           const codigoActual  = editor.getValue();
           const esTodo        = _claudeContextoTipo === "todo";
           let contextoFinal   = esTodo ? codigoActual : _claudeContexto;
-          // Agregar numeración de líneas cuando es código completo
           if (esTodo) {
             contextoFinal = contextoFinal.split('\n')
               .map((l, i) => `${String(i+1).padStart(4,' ')} | ${l}`)
               .join('\n');
           }
-          contenidoUsuario = `Contexto del código${esTodo ? ' (con números de línea)' : ''}:\n\`\`\`\n${contextoFinal}\n\`\`\`\n\nConsulta: ${pregunta}`;
+          contenidoUsuario = `Contexto del código${esTodo ? ' (con números de línea)' : ''}:\n\`\`\`\n${contextoFinal}\n\`\`\`\n\nConsulta: ${pregunta}` +
+            (contenidoUsuario !== pregunta ? '\n\n' + contenidoUsuario.replace(pregunta, '').trim() : '');
         }
+
+        // Truncar historial — máximo 20 mensajes (10 intercambios)
+        _claudeHistorial = truncarHistorial(_claudeHistorial, 20);
 
         agregarBurbuja("usuario", pregunta);
         const burbujaAsistente = agregarBurbuja("asistente", "", true);
@@ -2564,8 +2627,8 @@ Reglas importantes:
                 const hdr = document.createElement("div");
                 hdr.style.cssText = "display:flex;justify-content:space-between;align-items:center;padding:5px 10px;background:#181825;font-size:10px;color:#6c7086;";
                 const infoLinea = par.lineaInicio
-                  ? `<span style="color:#6c7086;font-size:9px;">Línea ${par.lineaInicio}${par.lineaFin ? '–'+par.lineaFin : ''}</span>`
-                  : '';
+                ? `<span style="color:#6c7086;font-size:9px;">Línea ${par.lineaInicio}${par.lineaFin ? '–'+par.lineaFin : ''}</span>`
+                : '';
                 hdr.innerHTML = `<span style="display:flex;gap:8px;align-items:center;">Par ${idx+1} de ${pares.length} ${infoLinea}</span>`;
 
                 const btnAplicar = document.createElement("button");
