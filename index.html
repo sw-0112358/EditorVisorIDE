@@ -1313,11 +1313,29 @@ REGLAS IMPORTANTES para bloques JS:
         const hayKeys    = anthropic || gemini || deepseek || openrouter;
 
         if (!hayKeys) {
-          // Sin keys nuevas → solo guardar Worker URL en localStorage
+          // Sin keys nuevas — guardar Worker URL local + prompt si cambió
           localStorage.setItem(WORKER_KEY, cfg.kv);
-          KV_BASE         = cfg.kv;
-          document.getElementById("configEstado").textContent = "✅ Worker URL guardado localmente";
-          document.getElementById("configEstado").style.color = "#a6e3a1";
+          KV_BASE = cfg.kv;
+          if (cfg.iaroll) {
+            // Subir solo el prompt al KV sin tocar las keys
+            try {
+              const resp = await fetch(`${KV_BASE}/config-save`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ id: getHistorialId(), iaroll: cfg.iaroll })
+              });
+              if (resp.ok) {
+                document.getElementById("configEstado").textContent = "✅ Prompt guardado en la nube";
+                document.getElementById("configEstado").style.color = "#a6e3a1";
+              } else throw new Error();
+            } catch(e) {
+              document.getElementById("configEstado").textContent = "✅ Worker URL guardado (prompt: error KV)";
+              document.getElementById("configEstado").style.color = "#fab387";
+            }
+          } else {
+            document.getElementById("configEstado").textContent = "✅ Worker URL guardado localmente";
+            document.getElementById("configEstado").style.color = "#a6e3a1";
+          }
           return;
         }
 
