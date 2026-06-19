@@ -3002,7 +3002,7 @@ Nota: Los números de linea son agregados de manera automática son para indicar
         const items     = [];
 
         // Regex de primer nivel (sin indentación inicial)
-        const RE_FUNC    = /^function\s+([\w$]+)\s*\(/;
+        const RE_FUNC    = /^(?:async\s+)?function\s+([\w$]+)\s*\(/;
         const RE_CLASS   = /^class\s+([\w$]+)/;
         const RE_CONST_F = /^(?:const|let|var)\s+([\w$]+)\s*=\s*(?:async\s+)?function/;
         const RE_CONST_A = /^(?:const|let|var)\s+([\w$]+)\s*=\s*(?:async\s+)?\(/;
