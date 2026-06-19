@@ -607,7 +607,6 @@
         padding: 8px 14px 12px;
         flex-shrink: 0;
         border-top: 1px solid rgba(200, 200, 220, 0.3);
-        order: 999;
       }
       #panelArbol-header span {
         font-family: 'JetBrains Mono', monospace;
@@ -634,7 +633,7 @@
         font-family: 'JetBrains Mono', monospace;
         font-size: 12px;
         width: calc(100% - 20px);
-        margin: 6px 10px;
+        margin: 6px 10px 2px;
         padding: 7px 12px;
         border: 1px solid rgba(200, 200, 220, 0.5);
         border-radius: 10px;
@@ -658,7 +657,7 @@
         font-family: 'JetBrains Mono', monospace;
         font-size: 10px;
         color: #888;
-        padding: 2px 14px 4px;
+        padding: 2px 14px 6px;
         flex-shrink: 0;
       }
 
@@ -1049,13 +1048,13 @@
 
     <!-- PANEL ÁRBOL DE FUNCIONES -->
     <div id="panelArbol" style="display:flex;flex-direction:column;">
-      <input id="panelArbol-buscar" type="text" placeholder="Filtrar…"
-             oninput="filtrarArbol(this.value)">
-      <div id="panelArbol-count"></div>
       <div id="panelArbol-scroll">
         <div class="arbol-vacio" id="arbol-vacio">Sin funciones detectadas</div>
         <div id="arbol-lista"></div>
       </div>
+      <input id="panelArbol-buscar" type="text" placeholder="Filtrar…"
+             oninput="filtrarArbol(this.value)">
+      <div id="panelArbol-count"></div>
       <div id="panelArbol-header">
         <span>📑 ÍNDICE</span>
         <button type="button" class="bottonV2" onclick="cerrarArbol()" title="Cerrar">✖️</button>
