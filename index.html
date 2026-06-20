@@ -1152,6 +1152,7 @@
         <button type="button" class="bottonV2" onclick="abrirClaude()" title="Claude IA">🤖</button>
         <button type="button" class="bottonV2" onclick="abrirConfig()" title="Configuración API">🔑</button>
         <button type="button" class="bottonV2" id="btnGithub" onclick="abrirGithub()" title="GitHub">🐙</button>
+        <button type="button" class="bottonV2" id="btnGithubSubir" onclick="githubSubirCambios()" title="Subir cambios a GitHub" style="display:none;">⬆️</button>
 
       </div>
     </div>
@@ -1754,16 +1755,13 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
       }
 
       function actualizarBotonSubirGithub() {
-        const btn = document.getElementById("btnGithub");
-        if (!btn) return;
+        const btnSubir = document.getElementById("btnGithubSubir");
+        if (!btnSubir) return;
         if (_githubArchivoOrigen) {
-          btn.textContent = "⬆️";
-          btn.title = `Subir cambios a ${_githubArchivoOrigen.repo}/${_githubArchivoOrigen.path}`;
-          btn.onclick = githubSubirCambios;
+          btnSubir.style.display = "inline-block";
+          btnSubir.title = `Subir cambios a ${_githubArchivoOrigen.repo}/${_githubArchivoOrigen.path}`;
         } else {
-          btn.textContent = "🐙";
-          btn.title = "GitHub";
-          btn.onclick = abrirGithub;
+          btnSubir.style.display = "none";
         }
       }
 
