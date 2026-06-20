@@ -1398,7 +1398,7 @@ CODIGO NUEVO
 
 Reglas importantes para indicar BUSCAR REEMPLAZAR:
 - Un solo par buscar/reemplazar por bloque start/end.
-- NUNCA incluyas números de línea — no son necesarios, el editor localiza el código automáticamente por su contenido.
+- No incluyas números de línea. El editor usa una función JavaScript (indexOf) que busca tu texto de **Buscar** directamente dentro del código completo del archivo y calcula automáticamente en qué línea aparece. Por eso el texto que pongas en **Buscar** debe coincidir EXACTAMENTE, carácter por carácter (incluyendo espacios e indentación), con lo que existe en el archivo real — de lo contrario la búsqueda no encontrará ninguna coincidencia y el cambio no podrá aplicarse.
 - El código dentro de \`\`\` debe ser exacto, sin resumir ni omitir partes.
 - Dentro de un mismo bloque start/end NUNCA propongas más de una opción de solución (por ejemplo, no escribas "puedes usar esto o esto otro"). Si hay varias formas posibles de resolverlo, elige una sola.
 - El texto de **Buscar** debe ser único y lo suficientemente largo para identificar exactamente un solo lugar en el archivo. NUNCA uses fragmentos cortos o genéricos que puedan repetirse, como una sola llave "}", una línea en blanco, "});", o una variable común sin contexto. Si la línea que quieres modificar es corta o ambigua, incluye también 1-2 líneas de contexto antes y/o después (las que ya existen en el archivo, sin modificarlas) para que el bloque completo sea único en todo el código.
