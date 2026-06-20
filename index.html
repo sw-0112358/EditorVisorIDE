@@ -1255,6 +1255,17 @@
             <input type="text" id="cfg-kv" placeholder="https://…workers.dev" autocomplete="off">
           </div>
           <div class="config-grupo">
+            <div class="claude-msg-label">🔑 ID DE SINCRONIZACIÓN</div>
+            <div id="cfg-idmadre-display"
+                 onclick="cambiarIdMadre()"
+                 style="font-family:'JetBrains Mono',monospace;font-size:11px;background:#f7f8fa;
+                        color:#4a5060;border:1px solid #e2e5ea;border-radius:6px;
+                        padding:8px 10px;cursor:pointer;word-break:break-all;
+                        transition:border-color .15s,background .15s;"
+                 title="Toca para cambiar — pega aquí la ID de otro dispositivo para sincronizar">
+            </div>
+          </div>
+          <div class="config-grupo">
             <div class="claude-msg-label">📝 SYSTEM PROMPT</div>
             <textarea id="cfg-iaroll" rows="4" placeholder="Eres un asistente…"></textarea>
           </div>
@@ -1288,6 +1299,10 @@
         </div>
 
         <div id="claudeAcciones">
+          <select id="claudeAgenteSelector" onchange="claudeAccionAgente(this.value);this.value=''">
+            <option value="">👩‍💼 Agente…</option>
+            <option value="cambiar_default">👩‍💼 default</option>
+          </select>
           <select onchange="claudeAccionContexto(this.value);this.value=''">
             <option value="">📄 Contexto…</option>
             <option value="todo">📄 Todo el código</option>
@@ -1297,7 +1312,6 @@
           </select>
           <select onchange="claudeAccionHistorial(this.value);this.value=''">
             <option value="">☁️ Historial…</option>
-            <option value="guardar">☁️ Guardar</option>
             <option value="cargar">📂 Cargar</option>
             <option value="limpiar">🗑️ Limpiar chat</option>
           </select>
@@ -1398,14 +1412,13 @@ Nota: Los números de linea son agregados de manera automática son para indicar
         document.getElementById("configEstado").style.color = "#fab387";
       }
 
+      // Carga el prompt del AGENTE ACTIVO (ya no de configId)
       async function cargarConfig() {
         try {
-          const resp = await fetch(`${KV_BASE}/kv-load?id=${getConfigId()}`);
+          const resp = await fetch(`${KV_BASE}/kv-load?id=${getPromptId()}`);
           const data = await resp.json();
-          if (data && data.iaroll) {
-            const el = document.getElementById("cfg-iaroll");
-            if (el) el.value = data.iaroll;
-          }
+          const el = document.getElementById("cfg-iaroll");
+          if (el) el.value = (data && data.iaroll) ? data.iaroll : '';
         } catch(e) { /* silencioso */ }
       }
 
@@ -1414,6 +1427,7 @@ Nota: Los números de linea son agregados de manera automática son para indicar
 
         // Cargar Worker URL del localStorage
         document.getElementById("cfg-kv").value    = localStorage.getItem(WORKER_KEY) || KV_BASE;
+        renderIdMadreDisplay();
 
         // Limpiar campos de keys — nunca se muestran
         document.getElementById("cfg-anthropic").value  = '';
@@ -1421,7 +1435,7 @@ Nota: Los números de linea son agregados de manera automática son para indicar
         document.getElementById("cfg-deepseek").value   = '';
         document.getElementById("cfg-openrouter").value = '';
 
-        // Consultar al Worker qué keys están guardadas
+        // Consultar al Worker qué keys están guardadas (compartidas entre agentes)
         try {
           const resp = await fetch(`${KV_BASE}/kv-load?id=${getConfigId()}`);
           const cfg  = await resp.json();
@@ -1434,9 +1448,11 @@ Nota: Los números de linea son agregados de manera automática son para indicar
               cfg.deepseek   ? "✅ Guardada en la nube — pega nueva para actualizar" : "sk-cfc…";
             document.getElementById("cfg-openrouter").placeholder =
               cfg.openrouter ? "✅ Guardada en la nube — pega nueva para actualizar" : "sk-or-…";
-            if (cfg.iaroll) document.getElementById("cfg-iaroll").value = cfg.iaroll;
           }
         } catch(e) {}
+
+        // Cargar prompt del agente activo
+        await cargarConfig();
 
         document.getElementById("configEstado").textContent = "Sin cambios";
         document.getElementById("configEstado").style.color = "#6c7086";
@@ -1458,7 +1474,7 @@ Nota: Los números de linea son agregados de manera automática son para indicar
 
         if (kvVal) { CF_WORKER = kvVal; KV_BASE = kvVal; localStorage.setItem(WORKER_KEY, kvVal); }
 
-        // Leer config actual para merge — no perder keys existentes
+        // ── Guardar API keys (compartidas, sin iaroll) ──
         let cfgActual = {};
         try {
           const respLoad = await fetch(`${KV_BASE}/kv-load?id=${getConfigId()}`);
@@ -1471,16 +1487,23 @@ Nota: Los números de linea son agregados de manera automática son para indicar
           deepseek:   deepseek   || cfgActual.deepseek   || '',
           openrouter: openrouter || cfgActual.openrouter || '',
           kv:         kvVal      || cfgActual.kv         || '',
-          iaroll:     iaroll     || cfgActual.iaroll     || '',
         };
 
         try {
-          const resp = await fetch(`${KV_BASE}/kv-save`, {
+          const respKeys = await fetch(`${KV_BASE}/kv-save`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ id: getConfigId(), data: cfgNueva })
           });
-          if (resp.ok) {
+
+          // ── Guardar prompt del agente activo por separado ──
+          const respPrompt = await fetch(`${KV_BASE}/kv-save`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id: getPromptId(), data: { iaroll } })
+          });
+
+          if (respKeys.ok && respPrompt.ok) {
             await cargarConfig();
             document.getElementById("configEstado").textContent = "✅ Guardado en la nube";
             document.getElementById("configEstado").style.color = "#a6e3a1";
@@ -1494,10 +1517,11 @@ Nota: Los números de linea son agregados de manera automática son para indicar
       }
 
       async function limpiarConfig() {
-        if (!confirm("¿Borrar toda la configuración?")) return;
+        if (!confirm("¿Borrar API keys y prompt del agente activo?")) return;
         localStorage.removeItem(WORKER_KEY);
         try {
           await fetch(`${KV_BASE}/kv-delete?id=${getConfigId()}`);
+          await fetch(`${KV_BASE}/kv-delete?id=${getPromptId()}`);
         } catch(e) {}
         document.getElementById("cfg-anthropic").value = '';
         document.getElementById("cfg-gemini").value    = '';
@@ -2268,13 +2292,116 @@ Nota: Los números de linea son agregados de manera automática son para indicar
         document.getElementById("modalClaude1").classList.remove("visible");
       }
 
+      // ── Gestión de agentes — rellena el selector dinámicamente ──
+      function renderSelectorAgentes() {
+        const sel = document.getElementById("claudeAgenteSelector");
+        if (!sel || !_registroAgentes) return;
+        const activo = getAgenteActivoNombre();
+        sel.innerHTML = '<option value="">🧑‍💼 Agente…</option>';
+
+        Object.keys(_registroAgentes.agentes).forEach(nombre => {
+          const info = _registroAgentes.agentes[nombre];
+          const opt  = document.createElement("option");
+          opt.value  = `cambiar_${nombre}`;
+          opt.textContent = (nombre === activo ? "✅ " : "🧑‍💼 ") + (info.nombre || nombre);
+          sel.appendChild(opt);
+        });
+
+        const optNuevo = document.createElement("option");
+        optNuevo.value = "__nuevo__";
+        optNuevo.textContent = "➕ Nuevo agente…";
+        sel.appendChild(optNuevo);
+
+        if (Object.keys(_registroAgentes.agentes).length > 1) {
+          const optEliminar = document.createElement("option");
+          optEliminar.value = "__eliminar__";
+          optEliminar.textContent = "🗑️ Eliminar agente activo";
+          sel.appendChild(optEliminar);
+        }
+
+        const optRenombrar = document.createElement("option");
+        optRenombrar.value = "__renombrar__";
+        optRenombrar.textContent = "✏️ Renombrar agente activo";
+        sel.appendChild(optRenombrar);
+      }
+
+      async function claudeAccionAgente(val) {
+        if (!val) return;
+
+        if (val === "__nuevo__") {
+          const nombreLegible = prompt("Nombre del nuevo agente (ej: Asistente legal):");
+          if (!nombreLegible || !nombreLegible.trim()) return;
+          const clave = nombreLegible.trim().toLowerCase()
+            .replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '') || ('agente_' + Date.now());
+          if (_registroAgentes.agentes[clave]) {
+            alert("Ya existe un agente con ese nombre.");
+            return;
+          }
+          _registroAgentes.agentes[clave] = {
+            nombre:      nombreLegible.trim(),
+            historialId: 'hist_'   + Date.now() + '_' + Math.random().toString(36).slice(2, 8),
+            promptId:    'prompt_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8),
+          };
+          await guardarRegistroAgentes();
+          setAgenteActivoNombre(clave);
+          await cargarConfig();
+          claudeLimpiar(); // chat vacío para el agente nuevo
+          renderSelectorAgentes();
+          mostrarEstado(`✅ Agente "${nombreLegible.trim()}" creado y activo`);
+          return;
+        }
+
+        if (val === "__eliminar__") {
+          const activo = getAgenteActivoNombre();
+          if (activo === AGENTE_DEFAULT) {
+            alert("No se puede eliminar el agente por defecto.");
+            return;
+          }
+          const info = _registroAgentes.agentes[activo];
+          if (!confirm(`¿Eliminar el agente "${info.nombre}"? Se borrará su historial y su prompt.`)) return;
+          try {
+            await fetch(`${KV_BASE}/kv-delete?id=${info.historialId}`);
+            await fetch(`${KV_BASE}/kv-delete?id=${info.promptId}`);
+          } catch(e) {}
+          delete _registroAgentes.agentes[activo];
+          await guardarRegistroAgentes();
+          setAgenteActivoNombre(AGENTE_DEFAULT);
+          await cargarConfig();
+          await cargarHistorialKV();
+          renderSelectorAgentes();
+          mostrarEstado("🗑️ Agente eliminado");
+          return;
+        }
+
+        if (val === "__renombrar__") {
+          const activo = getAgenteActivoNombre();
+          const info   = _registroAgentes.agentes[activo];
+          const nuevoNombre = prompt("Nuevo nombre para este agente:", info.nombre);
+          if (!nuevoNombre || !nuevoNombre.trim()) return;
+          info.nombre = nuevoNombre.trim();
+          await guardarRegistroAgentes();
+          renderSelectorAgentes();
+          mostrarEstado("✏️ Agente renombrado");
+          return;
+        }
+
+        if (val.startsWith("cambiar_")) {
+          const clave = val.slice("cambiar_".length);
+          if (clave === getAgenteActivoNombre()) return; // ya está activo
+          setAgenteActivoNombre(clave);
+          await cargarConfig();        // prompt del nuevo agente
+          await cargarHistorialKV();   // historial del nuevo agente
+          renderSelectorAgentes();
+          mostrarEstado(`🧑‍💼 Agente activo: ${_registroAgentes.agentes[clave].nombre}`);
+        }
+      }
+
       function claudeAccionContexto(val) {
         if (val) claudeContexto(val);
       }
 
-      function claudeAccionHistorial(val) {
-        if (val === 'guardar') guardarHistorialKV();
-        else if (val === 'cargar') cargarHistorialKV();
+      function claudeAccionHistorial(val) { 
+        if (val === 'cargar') cargarHistorialKV();
         else if (val === 'limpiar') claudeLimpiar();
       }
 
@@ -2827,16 +2954,52 @@ Nota: Los números de linea son agregados de manera automática son para indicar
          HISTORIAL EN CLOUDFLARE KV
       ============================================================ */
 
+      
+      function renderIdMadreDisplay() {
+        const el = document.getElementById('cfg-idmadre-display');
+        if (el) el.textContent = getIdMadre();
+      }
+
+      async function cambiarIdMadre() {
+        const actual = getIdMadre();
+        const nueva  = prompt(
+          "ID de sincronización actual:\n\n" + actual +
+          "\n\nPega aquí la ID de otro dispositivo para sincronizar todos tus agentes, historiales y prompts. Deja igual para mantener la actual:",
+          actual
+        );
+        if (nueva === null) return; // canceló
+        const limpia = nueva.trim();
+        if (!limpia || limpia === actual) return; // sin cambios
+
+        localStorage.setItem('_ide_id_madre', limpia);
+        renderIdMadreDisplay();
+
+        // Recargar todo bajo la nueva ID madre
+        document.getElementById("configEstado").textContent = "⏳ Sincronizando…";
+        document.getElementById("configEstado").style.color = "#fab387";
+
+        await cargarRegistroAgentes();
+        setAgenteActivoNombre(AGENTE_DEFAULT);
+        renderSelectorAgentes();
+        await cargarConfig();
+        await cargarHistorialKV();
+
+        document.getElementById("configEstado").textContent = "✅ ID de sincronización actualizada";
+        document.getElementById("configEstado").style.color = "#a6e3a1";
+      }
+      
       // ID único por dispositivo/navegador
-      function getHistorialId() {
-        let id = localStorage.getItem('_ide_historial_id');
+      // ── ID madre — raíz de todo, sincronizable entre dispositivos ──
+      function getIdMadre() {
+        let id = localStorage.getItem('_ide_id_madre');
         if (!id) {
-          id = 'ide_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
-          localStorage.setItem('_ide_historial_id', id);
+          id = 'madre_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+          localStorage.setItem('_ide_id_madre', id);
         }
         return id;
       }
 
+      // ── ID de configuración (API keys) — compartida por todos los agentes ──
       function getConfigId() {
         let id = localStorage.getItem('_ide_config_id');
         if (!id) {
@@ -2844,6 +3007,68 @@ Nota: Los números de linea son agregados de manera automática son para indicar
           localStorage.setItem('_ide_config_id', id);
         }
         return id;
+      }
+
+      // ── Registro de agentes — vive bajo la ID madre en KV ──
+      let _registroAgentes = null; // cache en memoria: { agentes: { nombre: { historialId, promptId, nombre } } }
+      const AGENTE_DEFAULT = 'default';
+
+      async function cargarRegistroAgentes() {
+        try {
+          const resp = await fetch(`${KV_BASE}/kv-load?id=${getIdMadre()}`);
+          const data = await resp.json();
+          if (data && data.agentes) {
+            _registroAgentes = data;
+          } else {
+            _registroAgentes = { agentes: {} };
+          }
+        } catch(e) {
+          _registroAgentes = { agentes: {} };
+        }
+        // Asegurar que exista al menos el agente "default"
+        if (!_registroAgentes.agentes[AGENTE_DEFAULT]) {
+          _registroAgentes.agentes[AGENTE_DEFAULT] = {
+            nombre:      'Asistente general',
+            historialId: 'hist_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8),
+            promptId:    'prompt_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8),
+          };
+          await guardarRegistroAgentes();
+        }
+        return _registroAgentes;
+      }
+
+      async function guardarRegistroAgentes() {
+        try {
+          await fetch(`${KV_BASE}/kv-save`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id: getIdMadre(), data: _registroAgentes })
+          });
+        } catch(e) { /* silencioso */ }
+      }
+
+      function getAgenteActivoNombre() {
+        return localStorage.getItem('_ide_agente_activo') || AGENTE_DEFAULT;
+      }
+
+      function setAgenteActivoNombre(nombre) {
+        localStorage.setItem('_ide_agente_activo', nombre);
+      }
+
+      function getAgenteActivo() {
+        const nombre = getAgenteActivoNombre();
+        return (_registroAgentes?.agentes?.[nombre]) || _registroAgentes?.agentes?.[AGENTE_DEFAULT];
+      }
+
+      // ── Reemplazan a las funciones antiguas: ahora dependen del agente activo ──
+      function getHistorialId() {
+        const agente = getAgenteActivo();
+        return agente ? agente.historialId : 'hist_fallback';
+      }
+
+      function getPromptId() {
+        const agente = getAgenteActivo();
+        return agente ? agente.promptId : 'prompt_fallback';
       }
 
       // El Worker guarda el historial automáticamente tras cada respuesta.
@@ -3187,6 +3412,8 @@ Nota: Los números de linea son agregados de manera automática son para indicar
       });
 
       document.addEventListener("DOMContentLoaded", async () => {
+        await cargarRegistroAgentes();
+        renderSelectorAgentes();
         await cargarConfig();
         setEditorNormal();
         setListBackup();
