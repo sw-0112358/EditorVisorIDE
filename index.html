@@ -2016,12 +2016,7 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
       /* ============================================================
          AUTOCOMPLETE Y HIGHLIGHT
       ============================================================ */
-      editor.on("inputRead", function(cm, change) {
-        if (change.text[0] && /[A-Za-z]/.test(change.text[0])) {
-          cm.showHint({ completeSingle: false });
-        }
-      });
-
+      
       let highlightTimeout;
       let aplicandoMarks = false;
 
@@ -2051,7 +2046,7 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
             }
           });
           aplicandoMarks = false;
-        }, 2000);
+        }, 5000);
       });
 
 
