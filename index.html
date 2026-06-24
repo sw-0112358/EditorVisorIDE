@@ -1583,17 +1583,25 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
         };
 
         try {
+          // Asegurar que el JSON maestro tenga un configId antes de guardar keys
+          if (!_registroAgentes.configId) {
+            _registroAgentes.configId = 'cfg_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+          }
+          // Guardar JSON maestro (con configId incluido)
+          await guardarRegistroAgentes();
+
+          // Guardar API keys bajo el configId del JSON maestro
           const respKeys = await fetch(`${KV_BASE}/kv-save`, {
-            method: "POST",
+            method:  "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ id: getConfigId(), data: cfgNueva })
+            body:    JSON.stringify({ id: getConfigId(), data: cfgNueva })
           });
 
-          // ── Guardar prompt del agente activo por separado ──
+          // Guardar prompt del agente activo
           const respPrompt = await fetch(`${KV_BASE}/kv-save`, {
-            method: "POST",
+            method:  "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ id: getPromptId(), data: { iaroll } })
+            body:    JSON.stringify({ id: getPromptId(), data: { iaroll } })
           });
 
           if (respKeys.ok && respPrompt.ok) {
@@ -3332,9 +3340,24 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
         document.getElementById("configEstado").textContent = "⏳ Sincronizando…";
         document.getElementById("configEstado").style.color = "#fab387";
 
+        _registroAgentes = null;
         await cargarRegistroAgentes();
         setAgenteActivoNombre(AGENTE_DEFAULT);
         renderSelectorAgentes();
+
+        // Recargar placeholders de API keys desde el configId del JSON maestro
+        try {
+          const resp = await fetch(`${KV_BASE}/kv-load?id=${getConfigId()}`);
+          const cfg  = await resp.json();
+          if (cfg) {
+            document.getElementById("cfg-anthropic").placeholder  = cfg.anthropic  ? "✅ Guardada en la nube — pega nueva para actualizar" : "sk-ant-api03-…";
+            document.getElementById("cfg-gemini").placeholder     = cfg.gemini     ? "✅ Guardada en la nube — pega nueva para actualizar" : "AQ.Ab8…";
+            document.getElementById("cfg-deepseek").placeholder   = cfg.deepseek   ? "✅ Guardada en la nube — pega nueva para actualizar" : "sk-cfc…";
+            document.getElementById("cfg-openrouter").placeholder = cfg.openrouter ? "✅ Guardada en la nube — pega nueva para actualizar" : "sk-or-…";
+            document.getElementById("cfg-github").placeholder     = cfg.github     ? "✅ Guardada en la nube — pega nuevo para actualizar"  : "github_pat_… o ghp_…";
+          }
+        } catch(e) {}
+
         await cargarConfig();
         await cargarHistorialKV();
 
@@ -3345,58 +3368,56 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
       // ID único por dispositivo/navegador
       // ── ID madre — raíz de todo, sincronizable entre dispositivos ──
       function getIdMadre() {
-        let id = localStorage.getItem('_ide_id_madre');
-        if (!id) {
-          id = 'madre_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
-          localStorage.setItem('_ide_id_madre', id);
-        }
-        return id;
+        return localStorage.getItem('_ide_id_madre') || '';
       }
 
-      // ── ID de configuración (API keys) — compartida por todos los agentes ──
+      function setIdMadre(id) {
+        localStorage.setItem('_ide_id_madre', id.trim());
+      }
+
+      // ── configId — se lee del JSON maestro, nunca se auto-genera ──
       function getConfigId() {
-        let id = localStorage.getItem('_ide_config_id');
-        if (!id) {
-          id = 'cfg_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
-          localStorage.setItem('_ide_config_id', id);
-        }
-        return id;
+        return (_registroAgentes && _registroAgentes.configId) ? _registroAgentes.configId : '';
       }
 
       // ── Registro de agentes — vive bajo la ID madre en KV ──
-      let _registroAgentes = null; // cache en memoria: { agentes: { nombre: { historialId, promptId, nombre } } }
+      let _registroAgentes = null;
       const AGENTE_DEFAULT = 'default';
 
       async function cargarRegistroAgentes() {
-        try {
-          const resp = await fetch(`${KV_BASE}/kv-load?id=${getIdMadre()}`);
-          const data = await resp.json();
-          if (data && data.agentes) {
-            _registroAgentes = data;
-          } else {
-            _registroAgentes = { agentes: {} };
-          }
-        } catch(e) {
+        // Solo cargar de KV si hay ID madre y Worker configurado
+        if (KV_BASE && getIdMadre()) {
+          try {
+            const resp  = await fetch(`${KV_BASE}/kv-load?id=${getIdMadre()}`);
+            const data  = await resp.json();
+            if (data && data.agentes) {
+              _registroAgentes = data;
+            }
+          } catch(e) { /* silencioso */ }
+        }
+        // Fallback: estructura vacía en memoria (sin escribir nada)
+        if (!_registroAgentes) {
           _registroAgentes = { agentes: {} };
         }
-        // Asegurar que exista al menos el agente "default"
+        // Asegurar agente default solo en memoria — no guardar en KV aquí
         if (!_registroAgentes.agentes[AGENTE_DEFAULT]) {
           _registroAgentes.agentes[AGENTE_DEFAULT] = {
             nombre:      'Asistente general',
-            historialId: 'hist_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8),
+            historialId: 'hist_'   + Date.now() + '_' + Math.random().toString(36).slice(2, 8),
             promptId:    'prompt_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8),
           };
-          await guardarRegistroAgentes();
         }
         return _registroAgentes;
       }
 
       async function guardarRegistroAgentes() {
+        // Solo guardar si hay ID madre — nunca escribir con ID vacía
+        if (!KV_BASE || !getIdMadre()) return;
         try {
           await fetch(`${KV_BASE}/kv-save`, {
-            method: "POST",
+            method:  "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ id: getIdMadre(), data: _registroAgentes })
+            body:    JSON.stringify({ id: getIdMadre(), data: _registroAgentes })
           });
         } catch(e) { /* silencioso */ }
       }
