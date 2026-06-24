@@ -1510,6 +1510,7 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
 
       // Carga el prompt del AGENTE ACTIVO (ya no de configId)
       async function cargarConfig() {
+        if (!KV_BASE || !getPromptId()) return;
         try {
           const resp = await fetch(`${KV_BASE}/kv-load?id=${getPromptId()}`);
           const data = await resp.json();
@@ -1532,23 +1533,25 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
         document.getElementById("cfg-openrouter").value = '';
         document.getElementById("cfg-github").value     = '';
 
-        // Consultar al Worker qué keys están guardadas (compartidas entre agentes)
-        try {
-          const resp = await fetch(`${KV_BASE}/kv-load?id=${getConfigId()}`);
-          const cfg  = await resp.json();
-          if (cfg) {
-            document.getElementById("cfg-anthropic").placeholder =
-              cfg.anthropic  ? "✅ Guardada en la nube — pega nueva para actualizar" : "sk-ant-api03-…";
-            document.getElementById("cfg-gemini").placeholder =
-              cfg.gemini     ? "✅ Guardada en la nube — pega nueva para actualizar" : "AQ.Ab8…";
-            document.getElementById("cfg-deepseek").placeholder =
-              cfg.deepseek   ? "✅ Guardada en la nube — pega nueva para actualizar" : "sk-cfc…";
-            document.getElementById("cfg-openrouter").placeholder =
-              cfg.openrouter ? "✅ Guardada en la nube — pega nueva para actualizar" : "sk-or-…";
-            document.getElementById("cfg-github").placeholder =
-              cfg.github     ? "✅ Guardada en la nube — pega nuevo para actualizar" : "github_pat_… o ghp_…";
-          }
-        } catch(e) {}
+        // Consultar al Worker qué keys están guardadas (solo si hay configId)
+        if (KV_BASE && getConfigId()) {
+          try {
+            const resp = await fetch(`${KV_BASE}/kv-load?id=${getConfigId()}`);
+            const cfg  = await resp.json();
+            if (cfg) {
+              document.getElementById("cfg-anthropic").placeholder =
+                cfg.anthropic  ? "✅ Guardada en la nube — pega nueva para actualizar" : "sk-ant-api03-…";
+              document.getElementById("cfg-gemini").placeholder =
+                cfg.gemini     ? "✅ Guardada en la nube — pega nueva para actualizar" : "AQ.Ab8…";
+              document.getElementById("cfg-deepseek").placeholder =
+                cfg.deepseek   ? "✅ Guardada en la nube — pega nueva para actualizar" : "sk-cfc…";
+              document.getElementById("cfg-openrouter").placeholder =
+                cfg.openrouter ? "✅ Guardada en la nube — pega nueva para actualizar" : "sk-or-…";
+              document.getElementById("cfg-github").placeholder =
+                cfg.github     ? "✅ Guardada en la nube — pega nuevo para actualizar" : "github_pat_… o ghp_…";
+            }
+          } catch(e) {}
+        }
 
         // Cargar prompt del agente activo
         await cargarConfig();
