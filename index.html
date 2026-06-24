@@ -46,15 +46,6 @@
 
     <style>
 
-      /*=============================================
-
-      Version#
-
-      49! Estable Conecta con GitHub 
-      50 visualiza src de paginas web
-
-      =============================================*/
-
       /* ============================================================
       VARIABLES DE TEMA
       ============================================================ */
@@ -213,7 +204,7 @@
 
       .active, .collapsible:hover { background-color: transparent; }
 
-      .MenuFlotante {
+      .menuFullPantalla {
         position: fixed;
         top: 50%;
         right: 20px;
@@ -236,13 +227,13 @@
         font-family: 'JetBrains Mono', monospace;
       }
 
-      .MenuFlotante::-webkit-scrollbar {
+      .menuFullPantalla::-webkit-scrollbar {
         width: 4px;
       }
-      .MenuFlotante::-webkit-scrollbar-track {
+      .menuFullPantalla::-webkit-scrollbar-track {
         background: transparent;
       }
-      .MenuFlotante::-webkit-scrollbar-thumb {
+      .menuFullPantalla::-webkit-scrollbar-thumb {
         background: rgba(0, 120, 215, 0.3);
         border-radius: 3px;
       }
@@ -1103,7 +1094,7 @@
     </div>
 
 
-    <div class="MenuFlotante">
+    <div class="menuFullPantalla">
       <div class="botones">
 
         <input id="NombreProyecto" type="text" value="Proyecto1">
@@ -1152,7 +1143,6 @@
         </select>
 
         <button type="button" class="bottonV2" onclick="cargarArchivo()">📂</button>
-        <button type="button" class="bottonV2" onclick="cargarDesdeNombre()" title="Cargar fuente desde URL">🌐</button>
         <button type="button" class="bottonV2" onclick="descargarArchivo()">💾</button>
         <button type="button" class="bottonV2" onclick="ejecutarArchivo()">▶️</button>
         <button type="button" class="bottonV2" onclick="guardarAlportapapeles()">📃</button>      
@@ -1304,21 +1294,15 @@
           </div>
           <div class="config-grupo">
             <div class="claude-msg-label">🔑 ID DE SINCRONIZACIÓN</div>
-            <div style="display:flex;gap:6px;align-items:center;">
-              <input type="text" id="cfg-idmadre-display"
-                     placeholder="Escribe tu ID personalizada o pega la de otro dispositivo"
-                     autocomplete="off" spellcheck="false"
-                     style="font-family:'JetBrains Mono',monospace;font-size:11px;flex:1;
-                            background:#313244;color:#cdd6f4;border:1px solid #45475a;
-                            border-radius:6px;padding:8px 10px;box-sizing:border-box;outline:none;">
-              <button onclick="sincronizarID()" title="Cargar datos de esta ID desde la nube"
-                      style="padding:8px 12px;font-size:14px;flex-shrink:0;border-radius:6px;
-                             background:#313244;color:#89b4fa;border:1px solid #45475a;">🔄</button>
+            <div id="cfg-idmadre-display"
+                 onclick="cambiarIdMadre()"
+                 style="font-family:'JetBrains Mono',monospace;font-size:11px;background:#f7f8fa;
+                        color:#4a5060;border:1px solid #e2e5ea;border-radius:6px;
+                        padding:8px 10px;cursor:pointer;word-break:break-all;
+                        transition:border-color .15s,background .15s;"
+                 title="Toca para cambiar — pega aquí la ID de otro dispositivo para sincronizar">
             </div>
-            <div style="font-size:10px;color:#6c7086;margin-top:4px;">
-              Elige un ID único (ej: <em>*****</em>). Guardar sobreescribe · 🔄 descarga la nube.
-            </div>
-          </div>      
+          </div>
           <div class="config-grupo">
             <div class="claude-msg-label">📝 SYSTEM PROMPT</div>
             <textarea id="cfg-iaroll" rows="4" placeholder="Eres un asistente…"></textarea>
@@ -1338,7 +1322,7 @@
       <div id="githubBox" style="display:flex;flex-direction:column;height:100%;background:#1e1e2e;">
 
         <div id="githubHeader" style="display:flex;justify-content:space-between;align-items:center;
-                                      padding:12px 16px;border-bottom:1px solid #45475a;flex-shrink:0;">
+                                       padding:12px 16px;border-bottom:1px solid #45475a;flex-shrink:0;">
           <strong id="githubTitulo" style="color:#cdd6f4;font-size:14px;">🐙 GitHub — Repositorios</strong>
           <div style="display:flex;gap:8px;align-items:center;">
             <button type="button" id="githubBtnVolver" onclick="githubVolverARepos()"
@@ -1355,7 +1339,7 @@
           </div>
         </div>
 
-
+        
 
 
         <div id="githubBuscador" style="padding:8px 16px;border-bottom:1px solid #313244;flex-shrink:0;">
@@ -1441,7 +1425,7 @@
     <script>
 
 
-      const IARollDefault = `Eres Claude Sonnet 4.6, una asistente de IA experta en desarrollo web, integrada en un IDE llamado EditorVisorIDE. Te comunicas de forma concisa, práctica y amigable, con un tono profesional pero accesible.
+ const IARollDefault = `Eres Claude Sonnet 4.6, una asistente de IA experta en desarrollo web, integrada en un IDE llamado EditorVisorIDE. Te comunicas de forma concisa, práctica y amigable, con un tono profesional pero accesible.
 Tu especialidad es ayudar con HTML, CSS y JavaScript en archivo único. Siempre priorizas la claridad, eficiencia y buenas prácticas del código.
 
 REGLAS DE RENDIMIENTO EN CSS — el código final corre principalmente en navegadores móviles, donde el rendimiento es limitado:
@@ -1499,7 +1483,7 @@ Reglas importantes para indicar BUSCAR REEMPLAZAR:
 IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español, responde en español. Sé conciso y evita divagaciones. Prioriza dar soluciones funcionales y bien explicadas.
 
 `      
-      ;
+    ;
 
 
       const WORKER_KEY    = '_cf_worker_url';
@@ -1527,11 +1511,11 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
       }
 
       async function abrirConfig() {
-        document.querySelector(".MenuFlotante").style.display = "none";
+        document.querySelector(".menuFullPantalla").style.display = "none";
 
         // Cargar Worker URL del localStorage
         document.getElementById("cfg-kv").value    = localStorage.getItem(WORKER_KEY) || KV_BASE;
-        renderIdRaizDisplay();
+        renderIdMadreDisplay();
 
         // Limpiar campos de keys — nunca se muestran
         document.getElementById("cfg-anthropic").value  = '';
@@ -1542,7 +1526,7 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
 
         // Consultar al Worker qué keys están guardadas (compartidas entre agentes)
         try {
-          const resp = await fetch(`${KV_BASE}/kv-load?id=${getKeysId()}`);
+          const resp = await fetch(`${KV_BASE}/kv-load?id=${getConfigId()}`);
           const cfg  = await resp.json();
           if (cfg) {
             document.getElementById("cfg-anthropic").placeholder =
@@ -1568,12 +1552,11 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
 
       function cerrarConfig() {
         document.getElementById("modalConfig").classList.remove("visible");
-        document.querySelector(".MenuFlotante").style.display = "block";
+        document.querySelector(".menuFullPantalla").style.display = "block";
       }
 
       async function guardarConfig() {
         const kvVal      = document.getElementById("cfg-kv").value.trim();
-        const idNueva    = document.getElementById("cfg-idmadre-display").value.trim();
         const iaroll     = document.getElementById("cfg-iaroll").value.trim();
         const anthropic  = document.getElementById("cfg-anthropic").value.trim();
         const gemini     = document.getElementById("cfg-gemini").value.trim();
@@ -1581,108 +1564,47 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
         const openrouter = document.getElementById("cfg-openrouter").value.trim();
         const github     = document.getElementById("cfg-github").value.trim();
 
-        if (!idNueva) {
-          document.getElementById("configEstado").textContent = "⚠️ Escribe una ID de sincronización";
-          document.getElementById("configEstado").style.color = "#fab387";
-          return;
-        }
-
         if (kvVal) { CF_WORKER = kvVal; KV_BASE = kvVal; localStorage.setItem(WORKER_KEY, kvVal); }
 
-        document.getElementById("configEstado").textContent = "⏳ Verificando…";
-        document.getElementById("configEstado").style.color = "#fab387";
+        // ── Guardar API keys (compartidas, sin iaroll) ──
+        let cfgActual = {};
+        try {
+          const respLoad = await fetch(`${KV_BASE}/kv-load?id=${getConfigId()}`);
+          cfgActual = (await respLoad.json()) || {};
+        } catch(e) {}
+
+        const cfgNueva = {
+          anthropic:  anthropic  || cfgActual.anthropic  || '',
+          gemini:     gemini     || cfgActual.gemini     || '',
+          deepseek:   deepseek   || cfgActual.deepseek   || '',
+          openrouter: openrouter || cfgActual.openrouter || '',
+          github:     github     || cfgActual.github     || '',
+          kv:         kvVal      || cfgActual.kv         || '',
+        };
 
         try {
-          // Verificar si ya existe data bajo esa ID
-          const idAnterior = getIdRaiz();
-          setIdRaiz(idNueva);
-
-          const respLoad = await fetch(`${KV_BASE}/kv-load?id=${getKeysId()}`);
-          const cfgExistente = await respLoad.json().catch(() => null);
-
-          let cfgFinal;
-          if (cfgExistente && (cfgExistente.anthropic || cfgExistente.gemini || cfgExistente.github)) {
-            // ID ya tiene datos → sincronizar: los campos vacíos toman los valores de la nube
-            cfgFinal = {
-              anthropic:  anthropic  || cfgExistente.anthropic  || '',
-              gemini:     gemini     || cfgExistente.gemini     || '',
-              deepseek:   deepseek   || cfgExistente.deepseek   || '',
-              openrouter: openrouter || cfgExistente.openrouter || '',
-              github:     github     || cfgExistente.github     || '',
-              kv:         kvVal      || cfgExistente.kv         || '',
-            };
-            document.getElementById("configEstado").textContent = "☁️ ID encontrada — sincronizando…";
-          } else {
-            // ID nueva → crear con los datos actuales
-            cfgFinal = {
-              anthropic:  anthropic  || '',
-              gemini:     gemini     || '',
-              deepseek:   deepseek   || '',
-              openrouter: openrouter || '',
-              github:     github     || '',
-              kv:         kvVal      || '',
-            };
-          }
-
-          // Asegurar que el JSON maestro tenga el keysId registrado
-          if (_registroAgentes) {
-            if (!_registroAgentes.keysId) _registroAgentes.keysId = getIdRaiz() + '_keys';
-            await guardarRegistroAgentes();
-          }
-
-          // Guardar keys
           const respKeys = await fetch(`${KV_BASE}/kv-save`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ id: getKeysId(), data: cfgFinal })
+            body: JSON.stringify({ id: getConfigId(), data: cfgNueva })
           });
-          if (!respKeys.ok) throw new Error('Error al guardar keys: ' + respKeys.status);
 
-          // Guardar prompt
+          // ── Guardar prompt del agente activo por separado ──
           const respPrompt = await fetch(`${KV_BASE}/kv-save`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ id: getPromptId(), data: { iaroll } })
           });
-          if (!respPrompt.ok) throw new Error('Error al guardar prompt: ' + respPrompt.status);
 
-          await cargarConfig();
-          document.getElementById("configEstado").textContent = "✅ Guardado · ID: " + idNueva;
-          document.getElementById("configEstado").style.color = "#a6e3a1";
-
+          if (respKeys.ok && respPrompt.ok) {
+            await cargarConfig();
+            document.getElementById("configEstado").textContent = "✅ Guardado en la nube";
+            document.getElementById("configEstado").style.color = "#a6e3a1";
+          } else {
+            throw new Error("Error del servidor");
+          }
         } catch(e) {
-          document.getElementById("configEstado").textContent = "❌ " + e.message;
-          document.getElementById("configEstado").style.color = "#f38ba8";
-        }
-      }
-
-      async function sincronizarID() {
-        const idNueva = document.getElementById("cfg-idmadre-display").value.trim();
-        const kvVal   = document.getElementById("cfg-kv").value.trim();
-        if (!idNueva) {
-          document.getElementById("configEstado").textContent = "⚠️ Escribe una ID primero";
-          document.getElementById("configEstado").style.color = "#fab387";
-          return;
-        }
-        if (kvVal) { CF_WORKER = kvVal; KV_BASE = kvVal; localStorage.setItem(WORKER_KEY, kvVal); }
-
-        document.getElementById("configEstado").textContent = "⏳ Sincronizando…";
-        document.getElementById("configEstado").style.color = "#fab387";
-
-        try {
-          // Aplicar la ID y cargar JSON maestro
-          setIdRaiz(idNueva);
-          _registroAgentes = null; // forzar recarga desde KV
-          await cargarRegistroAgentes();
-          setAgenteActivoNombre(AGENTE_DEFAULT);
-          renderSelectorAgentes();
-          await cargarConfig();
-          await cargarHistorialKV();
-
-          document.getElementById("configEstado").textContent = "✅ Sincronizado · ID: " + idNueva;
-          document.getElementById("configEstado").style.color = "#a6e3a1";
-        } catch(e) {
-          document.getElementById("configEstado").textContent = "❌ " + e.message;
+          document.getElementById("configEstado").textContent = "❌ Error: " + e.message;
           document.getElementById("configEstado").style.color = "#f38ba8";
         }
       }
@@ -1691,7 +1613,7 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
         if (!confirm("¿Borrar API keys y prompt del agente activo?")) return;
         localStorage.removeItem(WORKER_KEY);
         try {
-          await fetch(`${KV_BASE}/kv-delete?id=${getKeysId()}`);
+          await fetch(`${KV_BASE}/kv-delete?id=${getConfigId()}`);
           await fetch(`${KV_BASE}/kv-delete?id=${getPromptId()}`);
         } catch(e) {}
         document.getElementById("cfg-anthropic").value  = '';
@@ -1705,7 +1627,7 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
         document.getElementById("configEstado").textContent = "🗑️ Configuración borrada";
         document.getElementById("configEstado").style.color = "#6c7086";
       }
-
+      
       /* ============================================================
          GITHUB — navegación de repos y archivos
       ============================================================ */
@@ -1719,7 +1641,7 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
         const resp = await fetch(`${KV_BASE}/github-proxy`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ configId: getKeysId(), accion, ...extra })
+          body: JSON.stringify({ configId: getConfigId(), accion, ...extra })
         });
         const data = await resp.json();
         if (!resp.ok) throw new Error(data.error || "Error de GitHub");
@@ -1964,8 +1886,8 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
           btn.disabled = false;
         }
       }
-
-
+          
+          
       /* ============================================================
          CAMBIO DE TEMA
       ============================================================ */
@@ -2067,46 +1989,6 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
         return valor + ext;
       }
 
-      function cargarDesdeNombre() {
-        const valor = document.getElementById('NombreProyecto').value.trim();
-        if (!/^https?:\/\//i.test(valor)) {
-          mostrarEstado('⚠️ El nombre debe ser una URL (https://…)');
-          return;
-        }
-        cargarDesdeURL(valor);
-      }
-
-
-
-
-      async function cargarDesdeURL(url) {
-        // Cambiar nombre inmediatamente, antes del fetch
-        try {
-          const host = new URL(url).hostname.replace(/^www\./, '');
-          document.getElementById('NombreProyecto').value = host;
-        } catch(e) {}
-
-        if (!KV_BASE) {
-          mostrarEstado('⚠️ Configura el Worker URL primero');
-          return;
-        }
-
-        mostrarEstado('⏳ Obteniendo fuente…');
-        try {
-          const base     = KV_BASE.replace(/\/$/, '');
-          const endpoint = base + '/raw?target=' + encodeURIComponent(url);
-          const resp     = await fetch(endpoint);
-          if (!resp.ok) throw new Error('HTTP ' + resp.status);
-          const buffer   = await resp.arrayBuffer();
-          const texto    = new TextDecoder('utf-8').decode(buffer);
-          editor.setValue(texto);
-          editor.setOption('mode', 'htmlmixed');
-          mostrarEstado('✅ Fuente cargada');
-        } catch(err) {
-          mostrarEstado('❌ ' + err.message);
-        }
-      }
-
       function cargarArchivo() {
         const fileInput = document.createElement("input");
         fileInput.type = "file";
@@ -2144,7 +2026,7 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
       }
 
       function traslape() {
-        const menu = document.querySelector(".MenuFlotante");
+        const menu = document.querySelector(".menuFullPantalla");
         menu.style.display = menu.style.display === "none" ? "block" : "none";
       }
 
@@ -2475,7 +2357,7 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
       /* ============================================================
          AUTOCOMPLETE Y HIGHLIGHT
       ============================================================ */
-
+      
       let highlightTimeout;
       let aplicandoMarks = false;
 
@@ -2517,7 +2399,7 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
       let _buscarTexto   = "";   // Texto buscado actualmente
 
       function abrirMenuReemplazar() {
-        document.querySelector(".MenuFlotante").style.display = "none";
+        document.querySelector(".menuFullPantalla").style.display = "none";
         const m = document.getElementById("menuReemplazar");
         m.style.display = "flex";
         reiniciarMenuReemplazar();
@@ -2525,7 +2407,7 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
 
       function cerrarMenuReemplazar() {
         document.getElementById("menuReemplazar").style.display = "none";
-        document.querySelector(".MenuFlotante").style.display = "block";
+        document.querySelector(".menuFullPantalla").style.display = "block";
       }
 
       function reiniciarMenuReemplazar() {
@@ -2735,7 +2617,7 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
 
       function abrirClaude() {
         // Ocultar todos los demás paneles flotantes
-        document.querySelector(".MenuFlotante").style.display = "none";
+        document.querySelector(".menuFullPantalla").style.display = "none";
         document.getElementById("menuReemplazar").style.display   = "none";
         document.getElementById("modalDiff").classList.remove("visible");
         if (_arbolVisible) cerrarArbol();
@@ -2803,7 +2685,7 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
           const nombreLegible = prompt("Nombre del nuevo agente (ej: Asistente legal):");
           if (!nombreLegible || !nombreLegible.trim()) return;
           const clave = nombreLegible.trim().toLowerCase()
-          .replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '') || ('agente_' + Date.now());
+            .replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '') || ('agente_' + Date.now());
           if (_registroAgentes.agentes[clave]) {
             alert("Ya existe un agente con ese nombre.");
             return;
@@ -3015,7 +2897,7 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               id:            getHistorialId(),
-              configId:      getKeysId(),
+              configId:      getConfigId(),
               modelo:        _claudeModelo,
               modeloGemini:  "gemini-2.5-flash",
               modeloOR:      _modeloOR,
@@ -3426,95 +3308,97 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
          HISTORIAL EN CLOUDFLARE KV
       ============================================================ */
 
-
-      function renderIdRaizDisplay() {
+      
+      function renderIdMadreDisplay() {
         const el = document.getElementById('cfg-idmadre-display');
-        if (el) el.value = getIdRaiz();
+        if (el) el.textContent = getIdMadre();
       }
 
-      // cambiarIdRaiz eliminado — ahora se edita directamente en el campo de config
+      async function cambiarIdMadre() {
+        const actual = getIdMadre();
+        const nueva  = prompt(
+          "ID de sincronización actual:\n\n" + actual +
+          "\n\nPega aquí la ID de otro dispositivo para sincronizar todos tus agentes, historiales y prompts. Deja igual para mantener la actual:",
+          actual
+        );
+        if (nueva === null) return; // canceló
+        const limpia = nueva.trim();
+        if (!limpia || limpia === actual) return; // sin cambios
 
-      // ── ID Raíz — única fuente de verdad, sincronizable entre dispositivos ──
-      function getIdRaiz() {
-        return localStorage.getItem('_ide_id_raiz') || '';
+        localStorage.setItem('_ide_id_madre', limpia);
+        renderIdMadreDisplay();
+
+        // Recargar todo bajo la nueva ID madre
+        document.getElementById("configEstado").textContent = "⏳ Sincronizando…";
+        document.getElementById("configEstado").style.color = "#fab387";
+
+        await cargarRegistroAgentes();
+        setAgenteActivoNombre(AGENTE_DEFAULT);
+        renderSelectorAgentes();
+        await cargarConfig();
+        await cargarHistorialKV();
+
+        document.getElementById("configEstado").textContent = "✅ ID de sincronización actualizada";
+        document.getElementById("configEstado").style.color = "#a6e3a1";
+      }
+      
+      // ID único por dispositivo/navegador
+      // ── ID madre — raíz de todo, sincronizable entre dispositivos ──
+      function getIdMadre() {
+        let id = localStorage.getItem('_ide_id_madre');
+        if (!id) {
+          id = 'madre_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+          localStorage.setItem('_ide_id_madre', id);
+        }
+        return id;
       }
 
-      function setIdRaiz(id) {
-        localStorage.setItem('_ide_id_raiz', id.trim());
-      }
-
-      // ── IDs derivadas — se leen del JSON maestro ──
-      function getKeysId() {
-        return (_registroAgentes && _registroAgentes.keysId) ? _registroAgentes.keysId : getIdRaiz() + '_keys';
-      }
-
-      // ── ID de configuración (API keys) — derivada de la id madre para sincronización automática ──
+      // ── ID de configuración (API keys) — compartida por todos los agentes ──
       function getConfigId() {
-        return 'cfg_' + getIdRaiz();
+        let id = localStorage.getItem('_ide_config_id');
+        if (!id) {
+          id = 'cfg_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+          localStorage.setItem('_ide_config_id', id);
+        }
+        return id;
       }
 
-      // ── Registro de agentes — localStorage únicamente ──
-      let _registroAgentes = null;
+      // ── Registro de agentes — vive bajo la ID madre en KV ──
+      let _registroAgentes = null; // cache en memoria: { agentes: { nombre: { historialId, promptId, nombre } } }
       const AGENTE_DEFAULT = 'default';
-      const LS_AGENTES_KEY = '_ide_agentes';
 
       async function cargarRegistroAgentes() {
-        // Cargar JSON maestro desde KV usando la ID raíz
-        if (KV_BASE && getIdRaiz()) {
-          try {
-            const resp = await fetch(`${KV_BASE}/kv-load?id=${getIdRaiz()}`);
-            const maestro = await resp.json();
-            if (maestro && maestro.agentes) {
-              _registroAgentes = maestro;
-              localStorage.setItem(LS_AGENTES_KEY, JSON.stringify(_registroAgentes));
-            }
-          } catch(e) { /* silencioso — caer al localStorage */ }
-        }
-        // Fallback a localStorage
-        if (!_registroAgentes) {
-          try {
-            const raw = localStorage.getItem(LS_AGENTES_KEY);
-            _registroAgentes = raw ? JSON.parse(raw) : { agentes: {} };
-          } catch(e) {
+        try {
+          const resp = await fetch(`${KV_BASE}/kv-load?id=${getIdMadre()}`);
+          const data = await resp.json();
+          if (data && data.agentes) {
+            _registroAgentes = data;
+          } else {
             _registroAgentes = { agentes: {} };
           }
+        } catch(e) {
+          _registroAgentes = { agentes: {} };
         }
-        // Asegurar campos del JSON maestro
-        if (!_registroAgentes.keysId)    _registroAgentes.keysId    = getIdRaiz() + '_keys';
-        if (!_registroAgentes.agentesId) _registroAgentes.agentesId = getIdRaiz() + '_agentes';
-        if (!_registroAgentes.agentes)   _registroAgentes.agentes   = {};
+        // Asegurar que exista al menos el agente "default"
         if (!_registroAgentes.agentes[AGENTE_DEFAULT]) {
           _registroAgentes.agentes[AGENTE_DEFAULT] = {
             nombre:      'Asistente general',
-            historialId: 'hist_'   + Date.now() + '_' + Math.random().toString(36).slice(2, 8),
+            historialId: 'hist_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8),
             promptId:    'prompt_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8),
           };
           await guardarRegistroAgentes();
         }
-        // Migración: agentes existentes sin IDs
-        let necesitaGuardar = false;
-        Object.keys(_registroAgentes.agentes).forEach(clave => {
-          const ag = _registroAgentes.agentes[clave];
-          if (!ag.historialId) { ag.historialId = 'hist_'   + Date.now() + '_' + Math.random().toString(36).slice(2, 8); necesitaGuardar = true; }
-          if (!ag.promptId)    { ag.promptId    = 'prompt_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8); necesitaGuardar = true; }
-        });
-        if (necesitaGuardar) await guardarRegistroAgentes();
         return _registroAgentes;
       }
 
       async function guardarRegistroAgentes() {
-        // Siempre guardar en localStorage
-        try { localStorage.setItem(LS_AGENTES_KEY, JSON.stringify(_registroAgentes)); } catch(e) {}
-        // Guardar JSON maestro en KV bajo la ID raíz
-        if (KV_BASE && getIdRaiz()) {
-          try {
-            await fetch(`${KV_BASE}/kv-save`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ id: getIdRaiz(), data: _registroAgentes })
-            });
-          } catch(e) { /* silencioso */ }
-        }
+        try {
+          await fetch(`${KV_BASE}/kv-save`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id: getIdMadre(), data: _registroAgentes })
+          });
+        } catch(e) { /* silencioso */ }
       }
 
       function getAgenteActivoNombre() {
@@ -3590,11 +3474,11 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
 
           if (data && data.length > 0) {
             let historialLimpio = data
-            .filter(m => m.role === 'user' || m.role === 'assistant')
-            .map(m => ({
-              role:    m.role,
-              content: typeof m.content === 'string' ? m.content : JSON.stringify(m.content)
-            }));
+              .filter(m => m.role === 'user' || m.role === 'assistant')
+              .map(m => ({
+                role:    m.role,
+                content: typeof m.content === 'string' ? m.content : JSON.stringify(m.content)
+              }));
 
             const historialValido = [];
             let ultimoRol = null;
@@ -3612,8 +3496,8 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
             historialValido.forEach(m => {
               if (m.role === "user") {
                 const texto = m.content.includes("Consulta:")
-                ? m.content.split("Consulta:").pop().trim()
-                : m.content;
+                  ? m.content.split("Consulta:").pop().trim()
+                  : m.content;
                 agregarBurbuja("usuario", texto);
               } else {
                 agregarBurbuja("asistente", m.content);
@@ -3650,7 +3534,7 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
         chat.innerHTML = `<div class="claude-vacio" id="claudeVacio">
           <div class="icon">🤖</div>
           <p>Selecciona un contexto o escribe<br>tu consulta directamente</p>
-      </div>`;
+        </div>`;
         document.getElementById("claudeContextoInfo").textContent = "Sin contexto cargado";
         const btnAdj = document.getElementById('claude-btn-adjuntar');
         if (btnAdj) {
