@@ -1150,6 +1150,7 @@
         <button type="button" class="bottonV2" onclick="abrirMenuReemplazar()">✏️</button>
         <button type="button" class="bottonV2" onclick="toggleArbol()" title="Índice de funciones">📑</button>
         <button type="button" class="bottonV2" onclick="abrirClaude()" title="Claude IA">🤖</button>
+        <button type="button" class="bottonV2" onclick="fetchSrcUrl()" title="Obtener SRC de URL">🌐</button>
         <button type="button" class="bottonV2" onclick="abrirConfig()" title="Configuración API">🔑</button>
         <button type="button" class="bottonV2" id="btnGithub" onclick="abrirGithub()" title="GitHub">🐙</button>
         <button type="button" class="bottonV2" id="btnGithubSubir" onclick="githubSubirCambios()" title="Subir cambios a GitHub" style="display:none;">⬆️</button>
@@ -2077,6 +2078,43 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
       function traslape() {
         const menu = document.querySelector(".menuFullPantalla");
         menu.style.display = menu.style.display === "none" ? "block" : "none";
+      }
+
+      async function fetchSrcUrl() {
+        const url = prompt('🌐 URL a obtener (src):');
+        if (!url || !url.trim()) return;
+        const base = KV_BASE || CF_WORKER;
+        if (!base) { alert('⚠️ Configura el Worker primero (🔑)'); return; }
+
+        const estado = document.querySelector('#claudeEstado') || null;
+        const mostrarMsg = (t) => { if (estado) estado.textContent = t; };
+        mostrarMsg('⏳ Obteniendo SRC…');
+
+        try {
+          // Intentar con /fetch-html primero (simula navegador real)
+          let resp = await fetch(base.replace(/\/$/, '') + '/fetch-html?target=' + encodeURIComponent(url.trim())
+            + '&referer=' + encodeURIComponent(new URL(url.trim()).origin + '/'));
+          
+          // Fallback a /raw si no existe /fetch-html
+          if (!resp.ok) {
+            resp = await fetch(base.replace(/\/$/, '') + '/raw?target=' + encodeURIComponent(url.trim()));
+          }
+
+          if (!resp.ok) throw new Error('HTTP ' + resp.status);
+          const html = await resp.text();
+
+          // Cargar en el editor
+          if (typeof cm !== 'undefined') {
+            cm.setValue(html);
+            cm.clearHistory();
+            cm.refresh();
+          }
+
+          mostrarMsg('✅ SRC cargado — ' + html.length.toLocaleString() + ' chars');
+        } catch(err) {
+          mostrarMsg('❌ ' + err.message);
+          alert('❌ Error al obtener SRC: ' + err.message);
+        }
       }
 
       function guardarAlportapapeles() {
