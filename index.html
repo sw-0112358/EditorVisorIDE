@@ -3366,15 +3366,19 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
        
       async function conectarID() {
         const limpia = (document.getElementById('cfg-idmadre-display')?.value || '').trim();
+        const kvVal  = document.getElementById("cfg-kv")?.value.trim();
         if (!limpia) {
           document.getElementById("configEstado").textContent = "⚠️ Escribe una ID primero";
           document.getElementById("configEstado").style.color = "#fab387";
           return;
         }
+        // Guardar Worker e ID en localStorage antes de conectar
+        if (kvVal) { KV_BASE = kvVal; localStorage.setItem(WORKER_KEY, kvVal); }
+        setIdMadre(limpia);
+
         document.getElementById("configEstado").textContent = "⏳ Conectando…";
         document.getElementById("configEstado").style.color = "#fab387";
         try {
-          setIdMadre(limpia);
           _registroAgentes = null;
           await cargarRegistroAgentes();
           renderSelectorAgentes();
