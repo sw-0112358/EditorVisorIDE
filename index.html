@@ -1301,7 +1301,7 @@
                      style="font-family:'JetBrains Mono',monospace;font-size:11px;flex:1;
                             background:#f7f8fa;color:#4a5060;border:1px solid #e2e5ea;
                             border-radius:6px;padding:8px 10px;box-sizing:border-box;outline:none;">
-              <button onclick="conectarID()"
+              <button type="button" onclick="conectarID()"
                       title="Conectar a esta ID y descargar sus datos"
                       style="padding:8px 12px;font-size:15px;flex-shrink:0;
                              border-radius:6px;background:#f7f8fa;
@@ -3339,48 +3339,14 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
           document.getElementById("configEstado").style.color = "#fab387";
           return;
         }
-        if (!limpia || limpia === getIdMadre()) return;
-
-        if (!KV_BASE) {
-          document.getElementById("configEstado").textContent = "⚠️ Configura primero la KV Base URL";
-          document.getElementById("configEstado").style.color = "#fab387";
-          return;
-        }
-
         document.getElementById("configEstado").textContent = "⏳ Conectando…";
         document.getElementById("configEstado").style.color = "#fab387";
-
         try {
-          // Verificar que esa ID existe en KV antes de cambiar
-          const resp  = await fetch(`${KV_BASE}/kv-load?id=${limpia}`);
-          const datos = await resp.json();
-          if (!datos || !datos.agentes) {
-            document.getElementById("configEstado").textContent = "❌ ID no encontrada o sin datos";
-            document.getElementById("configEstado").style.color = "#f38ba8";
-            return;
-          }
-
-          // Aplicar la nueva ID y cargar todo
           setIdMadre(limpia);
-          renderIdMadreDisplay();
           _registroAgentes = null;
           await cargarRegistroAgentes();
-          setAgenteActivoNombre(AGENTE_DEFAULT);
           renderSelectorAgentes();
-
-          // Recargar placeholders de API keys
-          const cfg = datos.configId ? (await (await fetch(`${KV_BASE}/kv-load?id=${datos.configId}`)).json()) : null;
-          if (cfg) {
-            document.getElementById("cfg-anthropic").placeholder  = cfg.anthropic  ? "✅ Guardada en la nube — pega nueva para actualizar" : "sk-ant-api03-…";
-            document.getElementById("cfg-gemini").placeholder     = cfg.gemini     ? "✅ Guardada en la nube — pega nueva para actualizar" : "AQ.Ab8…";
-            document.getElementById("cfg-deepseek").placeholder   = cfg.deepseek   ? "✅ Guardada en la nube — pega nueva para actualizar" : "sk-cfc…";
-            document.getElementById("cfg-openrouter").placeholder = cfg.openrouter ? "✅ Guardada en la nube — pega nueva para actualizar" : "sk-or-…";
-            document.getElementById("cfg-github").placeholder     = cfg.github     ? "✅ Guardada en la nube — pega nuevo para actualizar"  : "github_pat_… o ghp_…";
-          }
-
           await cargarConfig();
-          await cargarHistorialKV();
-
           document.getElementById("configEstado").textContent = "✅ Conectado · ID: " + limpia;
           document.getElementById("configEstado").style.color = "#a6e3a1";
         } catch(e) {
