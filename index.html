@@ -1565,6 +1565,7 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
 
       async function guardarConfig() {
         const kvVal      = document.getElementById("cfg-kv").value.trim();
+        const idVal      = document.getElementById("cfg-idmadre-display").value.trim();
         const iaroll     = document.getElementById("cfg-iaroll").value.trim();
         const anthropic  = document.getElementById("cfg-anthropic").value.trim();
         const gemini     = document.getElementById("cfg-gemini").value.trim();
@@ -1572,33 +1573,51 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
         const openrouter = document.getElementById("cfg-openrouter").value.trim();
         const github     = document.getElementById("cfg-github").value.trim();
 
-        if (kvVal) { CF_WORKER = kvVal; KV_BASE = kvVal; localStorage.setItem(WORKER_KEY, kvVal); }
+        // Validar que haya Worker e ID antes de hacer nada
+        if (!kvVal && !KV_BASE) {
+          document.getElementById("configEstado").textContent = "⚠️ Ingresa la KV Base URL primero";
+          document.getElementById("configEstado").style.color = "#fab387";
+          return;
+        }
+        if (!idVal) {
+          document.getElementById("configEstado").textContent = "⚠️ Ingresa una ID de sincronización primero";
+          document.getElementById("configEstado").style.color = "#fab387";
+          return;
+        }
 
-        // ── Guardar API keys (compartidas, sin iaroll) ──
-        let cfgActual = {};
+        if (kvVal) { KV_BASE = kvVal; localStorage.setItem(WORKER_KEY, kvVal); }
+        if (idVal) { setIdMadre(idVal); }
+
+        document.getElementById("configEstado").textContent = "⏳ Guardando…";
+        document.getElementById("configEstado").style.color = "#fab387";
+
         try {
-          const respLoad = await fetch(`${KV_BASE}/kv-load?id=${getConfigId()}`);
-          cfgActual = (await respLoad.json()) || {};
-        } catch(e) {}
-
-        const cfgNueva = {
-          anthropic:  anthropic  || cfgActual.anthropic  || '',
-          gemini:     gemini     || cfgActual.gemini     || '',
-          deepseek:   deepseek   || cfgActual.deepseek   || '',
-          openrouter: openrouter || cfgActual.openrouter || '',
-          github:     github     || cfgActual.github     || '',
-          kv:         kvVal      || cfgActual.kv         || '',
-        };
-
-        try {
-          // Asegurar que el JSON maestro tenga un configId antes de guardar keys
+          // Asegurar configId en el JSON maestro
           if (!_registroAgentes.configId) {
             _registroAgentes.configId = 'cfg_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
           }
-          // Guardar JSON maestro (con configId incluido)
+          // Guardar JSON maestro
           await guardarRegistroAgentes();
 
-          // Guardar API keys bajo el configId del JSON maestro
+          // Leer keys existentes para no sobreescribir con vacíos
+          let cfgActual = {};
+          if (getConfigId()) {
+            try {
+              const respLoad = await fetch(`${KV_BASE}/kv-load?id=${getConfigId()}`);
+              cfgActual = (await respLoad.json()) || {};
+            } catch(e) {}
+          }
+
+          const cfgNueva = {
+            anthropic:  anthropic  || cfgActual.anthropic  || '',
+            gemini:     gemini     || cfgActual.gemini     || '',
+            deepseek:   deepseek   || cfgActual.deepseek   || '',
+            openrouter: openrouter || cfgActual.openrouter || '',
+            github:     github     || cfgActual.github     || '',
+            kv:         kvVal      || cfgActual.kv         || '',
+          };
+
+          // Guardar keys
           const respKeys = await fetch(`${KV_BASE}/kv-save`, {
             method:  "POST",
             headers: { "Content-Type": "application/json" },
@@ -1614,7 +1633,18 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
 
           if (respKeys.ok && respPrompt.ok) {
             await cargarConfig();
-            document.getElementById("configEstado").textContent = "✅ Guardado en la nube";
+            // Mostrar qué se guardó
+            const keysGuardadas = [
+              cfgNueva.anthropic  ? "Anthropic"  : '',
+              cfgNueva.gemini     ? "Gemini"     : '',
+              cfgNueva.deepseek   ? "DeepSeek"   : '',
+              cfgNueva.openrouter ? "OpenRouter" : '',
+              cfgNueva.github     ? "GitHub"     : '',
+            ].filter(Boolean);
+            const resumen = keysGuardadas.length
+              ? "✅ Guardado · Keys: " + keysGuardadas.join(", ")
+              : "✅ Guardado · Worker e ID registrados";
+            document.getElementById("configEstado").textContent = resumen;
             document.getElementById("configEstado").style.color = "#a6e3a1";
           } else {
             throw new Error("Error del servidor");
