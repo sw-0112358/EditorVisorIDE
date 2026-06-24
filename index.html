@@ -3465,6 +3465,11 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
         return agente ? agente.historialId : 'hist_fallback';
       }
 
+      function getPromptId() {
+        const agente = getAgenteActivo();
+        return agente ? agente.promptId : 'prompt_fallback';
+      }
+
       // El Worker guarda el historial automáticamente tras cada respuesta.
       // Esta función queda como respaldo manual (ej. tras editar algo localmente).
       async function guardarHistorialKV() {
