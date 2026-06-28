@@ -2096,9 +2096,9 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
           let resp = await fetch(base.replace(/\/$/, '') + '/fetch-html?target=' + encodeURIComponent(url.trim())
             + '&referer=' + encodeURIComponent(new URL(url.trim()).origin + '/'));
           
-          // Fallback a /raw si no existe /fetch-html
+          // Fallback a /fetch-html si no existe /fetch-html
           if (!resp.ok) {
-            resp = await fetch(base.replace(/\/$/, '') + '/raw?target=' + encodeURIComponent(url.trim()));
+            resp = await fetch(base.replace(/\/$/, '') + '/fetch-html?target=' + encodeURIComponent(url.trim()));
           }
 
           if (!resp.ok) throw new Error('HTTP ' + resp.status);
