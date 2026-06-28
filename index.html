@@ -1072,6 +1072,15 @@
       }
       #menuOR-footer button:hover { background: #b48ead; transform: none; }
 
+      .toggle-row { display:flex; align-items:center; gap:10px; padding:6px 0; }
+      .toggle { position:relative; width:36px; height:20px; flex-shrink:0; }
+      .toggle input { opacity:0; width:0; height:0; }
+      .toggle-track { position:absolute; inset:0; background:#555; border-radius:20px; cursor:pointer; transition:background 0.2s; }
+      .toggle-track::after { content:''; position:absolute; width:14px; height:14px; background:#fff; border-radius:50%; top:3px; left:3px; transition:transform 0.2s; box-shadow:0 1px 3px rgba(0,0,0,0.15); }
+      .toggle input:checked + .toggle-track { background:#cba6f7; }
+      .toggle input:checked + .toggle-track::after { transform:translateX(16px); }
+      .toggle-label { font-size:13px; color:var(--fg-editor,#cdd6f4); cursor:pointer; user-select:none; }
+    
     </style>
   </head>
   <body class="tema-claro">
@@ -1096,7 +1105,7 @@
 
     <div class="menuFullPantalla">
       <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px 4px;border-bottom:1px solid var(--border-menu,#cba6f7);margin-bottom:6px;flex-shrink:0;">
-        <strong style="font-size:13px;color:var(--color-menu-text,#000);">🪷v50❄️</strong>
+        <strong style="font-size:13px;color:var(--color-menu-text,#000);">🪷v51❄️</strong>
         <button type="button" class="bottonV2" onclick="traslape()" title="Cerrar">✖️</button>
       </div>
       <div class="botones">
@@ -1162,6 +1171,35 @@
       </div>
     </div>
 
+
+    <!-- MODAL SRC -->
+    <div class="modalClaude" id="modalSrc">
+      <div id="configBox">
+        <div id="configHeader">
+          <strong>🌐 Obtener SRC de URL</strong>
+          <button type="button" class="bottonV2" onclick="cerrarSrc()" title="Cerrar">✖️</button>
+        </div>
+        <div id="configBody" style="display:flex;flex-direction:column;gap:12px;">
+          <div class="config-grupo">
+            <div class="claude-msg-label">🔗 URL</div>
+            <input type="text" id="srcUrl" placeholder="https://…" autocomplete="off"
+              onkeydown="if(event.key==='Enter') ejecutarFetchSrc()">
+          </div>
+          <label class="toggle-row">
+            <span class="toggle">
+              <input type="checkbox" id="srcUseSW">
+              <span class="toggle-track"></span>
+            </span>
+            <span class="toggle-label">Usar Service Worker (sitios que bloquean el Worker)</span>
+          </label>
+          <div id="srcEstado" style="font-size:12px;min-height:18px;"></div>
+        </div>
+        <div id="configAcciones">
+          <button onclick="ejecutarFetchSrc()">🌐 Obtener</button>
+          <button onclick="cerrarSrc()">✖️ Cancelar</button>
+        </div>
+      </div>
+    </div>
 
     <!-- MENÚ REEMPLAZAR -->
     <div id="menuReemplazar">
@@ -2085,7 +2123,59 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
         menu.style.display = menu.style.display === "none" ? "block" : "none";
       }
 
-      async function fetchSrcUrl() {
+      function fetchSrcUrl() {
+        document.getElementById('modalSrc').classList.add('visible');
+        setTimeout(() => document.getElementById('srcUrl').focus(), 100);
+      }
+
+      function cerrarSrc() {
+        document.getElementById('modalSrc').classList.remove('visible');
+        document.getElementById('srcEstado').textContent = '';
+      }
+
+      async function ejecutarFetchSrc() {
+        const url    = document.getElementById('srcUrl').value.trim();
+        const useSW  = document.getElementById('srcUseSW').checked;
+        const estado = document.getElementById('srcEstado');
+        if (!url) return;
+        estado.textContent = '⏳ Obteniendo SRC…';
+        try {
+          let html;
+          if (useSW) {
+            const resp = await fetch('/nc-proxy?url=' + encodeURIComponent(url));
+            if (!resp.ok) throw new Error('SW HTTP ' + resp.status);
+            html = await resp.text();
+          } else {
+            const base = KV_BASE || CF_WORKER;
+            if (!base) throw new Error('Configura el Worker primero (🔑)');
+            const resp = await fetch(base.replace(/\/$/, '') + '/fetch-html?target=' + encodeURIComponent(url)
+              + '&referer=' + encodeURIComponent(new URL(url).origin + '/'));
+            if (!resp.ok) throw new Error('Worker HTTP ' + resp.status);
+            html = await resp.text();
+          }
+          const extSel = document.getElementById('extSelector');
+          if (extSel && extSel.value !== '.html') extSel.value = '.html';
+          const nombreSel = document.getElementById('NombreProyecto');
+          if (nombreSel) {
+            try {
+              const u = new URL(url);
+              const seg = u.pathname.split('/').filter(Boolean).pop() || u.hostname;
+              nombreSel.value = seg.replace(/\.[^.]+$/, '') || 'pagina';
+            } catch(e) { nombreSel.value = 'pagina'; }
+          }
+          if (typeof editor !== 'undefined') {
+            editor.setValue(html);
+            editor.clearHistory();
+            editor.refresh();
+          }
+          estado.textContent = '✅ ' + html.length.toLocaleString() + ' chars';
+          cerrarSrc();
+        } catch(err) {
+          estado.textContent = '❌ ' + err.message;
+        }
+      }
+
+      async function fetchSrcUrl_unused() {
         const url = prompt('🌐 URL a obtener (src):');
         if (!url || !url.trim()) return;
         const base = KV_BASE || CF_WORKER;
