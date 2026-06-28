@@ -12,10 +12,8 @@ self.addEventListener("fetch", event => {
         fetch(target, {
           credentials: 'omit',
           headers: {
-            'User-Agent':      'Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.6367.82 Mobile Safari/537.36',
-            'Accept':          'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+            'Accept':          'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
             'Accept-Language': 'es-ES,es;q=0.9',
-            'Referer':         new URL(target).origin + '/',
           }
         }).then(async resp => {
           const body = await resp.arrayBuffer();
@@ -26,7 +24,7 @@ self.addEventListener("fetch", event => {
               'Access-Control-Allow-Origin': '*',
             }
           });
-        }).catch(err => new Response('Error SW: ' + err.message, { status: 500 }))
+        }).catch(err => new Response('Error SW: ' + err.message + ' | target: ' + target, { status: 500 }))
       );
       return;
     }
