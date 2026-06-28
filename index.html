@@ -735,10 +735,20 @@
         background: rgba(0,0,0,0.65);
         z-index: 99998;
         display: none;
-        align-items: center;
-        justify-content: center;
+        align-items: flex-start;
+        justify-content: flex-start;
+        padding: 0;
       }
       .modalClaude.visible { display: flex; }
+
+      /* El contenedor interno del modal SRC se posiciona por sí mismo (fixed) */
+      #modalSrc > div {
+        animation: fadeInUp 0.2s ease-out;
+      }
+      @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(10px) scale(0.97); }
+        to   { opacity: 1; transform: translateY(0) scale(1); }
+      }
 
       #githubBox {
         width: 92%;
@@ -1174,32 +1184,30 @@
 
     <!-- MODAL SRC -->
     <div class="modalClaude" id="modalSrc">
-      <div class="menuFullPantalla" style="position:relative;max-width:420px;width:92%;border-radius:12px;max-height:80vh;overflow-y:auto;display:flex;flex-direction:column;">
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px 4px;border-bottom:1px solid var(--border-menu,#cba6f7);margin-bottom:6px;flex-shrink:0;">
-          <strong style="font-size:13px;color:var(--color-menu-text,#000);">🌐 Obtener SRC de URL</strong>
+      <div style="position:fixed;top:50%;right:20px;width:320px;max-height:80vh;overflow-y:auto;background:rgba(255,255,255,0.85);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);color:var(--color-menu-text);padding:0;border-radius:16px;border:1px solid rgba(200,200,220,0.5);box-shadow:0 8px 32px rgba(0,0,0,0.12),0 2px 8px rgba(0,0,0,0.06),inset 0 1px 0 rgba(255,255,255,0.8);z-index:9999;font-family:'JetBrains Mono',monospace;display:flex;flex-direction:column;">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid rgba(200,200,220,0.5);flex-shrink:0;">
+          <strong style="font-size:13px;color:#333;">🌐 Obtener SRC de URL</strong>
           <button type="button" class="bottonV2" onclick="cerrarSrc()" title="Cerrar">✖️</button>
         </div>
-        <div style="padding:8px 10px;display:flex;flex-direction:column;gap:12px;">
-          <strong>🌐 Obtener SRC de URL</strong>
-          <button type="button" class="bottonV2" onclick="cerrarSrc()" title="Cerrar">✖️</button>
-        </div>
-        <div id="configBody" style="display:flex;flex-direction:column;gap:12px;">
-          <div class="config-grupo">
-            <div class="claude-msg-label">🔗 URL</div>
+        <div style="padding:16px;display:flex;flex-direction:column;gap:14px;">
+          <div style="display:flex;flex-direction:column;gap:6px;">
+            <div style="font-size:11px;color:#666;font-weight:600;letter-spacing:0.02em;">🔗 URL</div>
             <input type="text" id="srcUrl" placeholder="https://…" autocomplete="off"
-              onkeydown="if(event.key==='Enter') ejecutarFetchSrc()">
+              onkeydown="if(event.key==='Enter') ejecutarFetchSrc()"
+              style="font-family:'JetBrains Mono',monospace;font-size:12px;width:100%;padding:8px 12px;border:1px solid rgba(200,200,220,0.5);border-radius:10px;background:rgba(255,255,255,0.8);color:#333;outline:none;box-sizing:border-box;transition:all 0.25s ease;box-shadow:0 1px 3px rgba(0,0,0,0.03);">
           </div>
-          <label class="toggle-row">
-            <span class="toggle">
-              <input type="checkbox" id="srcUseSW">
-              <span class="toggle-track"></span>
+          <label style="display:flex;align-items:center;gap:10px;cursor:pointer;">
+            <span style="position:relative;width:36px;height:20px;flex-shrink:0;">
+              <input type="checkbox" id="srcUseSW" style="opacity:0;width:0;height:0;">
+              <span style="position:absolute;inset:0;background:#555;border-radius:20px;cursor:pointer;transition:background 0.2s;"></span>
+              <span style="position:absolute;width:14px;height:14px;background:#fff;border-radius:50%;top:3px;left:3px;transition:transform 0.2s;box-shadow:0 1px 3px rgba(0,0,0,0.15);pointer-events:none;" id="srcToggleThumb"></span>
             </span>
-            <span class="toggle-label">Usar Service Worker (sitios que bloquean el Worker)</span>
+            <span style="font-size:12px;color:#555;font-family:'JetBrains Mono',monospace;cursor:pointer;">Usar Service Worker</span>
           </label>
-          <div id="srcEstado" style="font-size:12px;min-height:18px;color:var(--color-menu-text,#000);"></div>
+          <div id="srcEstado" style="font-size:12px;min-height:20px;color:#555;padding:4px 0;font-family:'JetBrains Mono',monospace;"></div>
           <div style="display:flex;gap:8px;">
-            <button class="bottonV2" style="flex:1" onclick="ejecutarFetchSrc()">🌐 Obtener</button>
-            <button class="bottonV2" style="flex:1" onclick="cerrarSrc()">✖️ Cancelar</button>
+            <button class="bottonV2" style="flex:1;background:rgba(200,200,220,0.3);color:#333;border:1px solid rgba(200,200,220,0.5);padding:8px 14px;border-radius:10px;font-size:13px;font-family:'JetBrains Mono',monospace;cursor:pointer;transition:all 0.25s ease;box-shadow:0 1px 3px rgba(0,0,0,0.04);font-weight:500;letter-spacing:0.02em;text-align:center;" onclick="ejecutarFetchSrc()">🌐 Obtener</button>
+            <button class="bottonV2" style="flex:1;background:rgba(200,200,220,0.3);color:#333;border:1px solid rgba(200,200,220,0.5);padding:8px 14px;border-radius:10px;font-size:13px;font-family:'JetBrains Mono',monospace;cursor:pointer;transition:all 0.25s ease;box-shadow:0 1px 3px rgba(0,0,0,0.04);font-weight:500;letter-spacing:0.02em;text-align:center;" onclick="cerrarSrc()">✖️ Cancelar</button>
           </div>
         </div>
       </div>
@@ -2131,6 +2139,18 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
         document.getElementById('modalSrc').classList.add('visible');
         setTimeout(() => document.getElementById('srcUrl').focus(), 100);
       }
+
+      // Sincronizar el thumb del toggle de srcUseSW
+      document.addEventListener('change', function(e) {
+        if (e.target.id === 'srcUseSW') {
+          const thumb = document.getElementById('srcToggleThumb');
+          if (thumb) {
+            thumb.style.transform = e.target.checked ? 'translateX(16px)' : 'translateX(0)';
+            const track = thumb.parentElement.querySelector('span:first-child');
+            if (track) track.style.background = e.target.checked ? '#cba6f7' : '#555';
+          }
+        }
+      });
 
       function cerrarSrc() {
         document.getElementById('modalSrc').classList.remove('visible');
