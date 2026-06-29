@@ -1210,7 +1210,8 @@
 
     <div class="menuFullPantalla">
       <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px 4px;border-bottom:1px solid var(--border-menu,#cba6f7);margin-bottom:6px;flex-shrink:0;">
-        <strong style="font-size:13px;color:var(--color-menu-text,#000);">🪷v53❄️</strong>
+        <strong style="font-size:13px;color:var(--color-menu-text,#000);">
+          🪷v58❄️</strong>
         <button type="button" class="bottonV2" onclick="traslape()" title="Cerrar">✖️</button>
       </div>
       <div class="botones">
@@ -2640,14 +2641,14 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
           return;
         }
 
-        // Leer todos los metadatos en paralelo
+        // Leer solo metadatos (sin contenido) para no saturar memoria
         const entradas = await Promise.all(idxs.map(async idx => {
           const key = bkClave(proyecto, idx);
           try {
             const r    = await bkStorage.get(key);
             const data = JSON.parse(r.value);
-            return { idx, key, fecha: data.fecha, peso: data.peso, contenido: data.contenido };
-          } catch(e) { return { idx, key, fecha: "—", peso: "—", contenido: null }; }
+            return { idx, key, fecha: data.fecha, peso: data.peso };
+          } catch(e) { return { idx, key, fecha: "—", peso: "—" }; }
         }));
 
         lista.innerHTML = "";
@@ -2667,7 +2668,13 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
               <button class="bi-btn danger" title="Eliminar">🗑️</button>
             </div>`;
           const btns = div.querySelectorAll(".bi-btn");
-          btns[0].addEventListener("click", () => bkVerDiff(e.contenido, proyecto, e.idx));
+          btns[0].addEventListener("click", async () => {
+            try {
+              const r    = await bkStorage.get(e.key);
+              const data = JSON.parse(r.value);
+              bkVerDiff(data.contenido, proyecto, e.idx);
+            } catch(err) { mostrarEstado("❌ Error al leer backup: " + err.message); }
+          });
           btns[1].addEventListener("click", () => bkEliminar(e.key, div));
           lista.appendChild(div);
         });
@@ -2770,6 +2777,8 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
 
       function cerrarDiff() {
         document.getElementById("modalDiff").classList.remove("visible");
+        _backupParaDiff     = null;
+        _backupNombreLimpio = null;
       }
 
       /* ---- Algoritmo diff línea a línea (LCS simplificado) ---- */
