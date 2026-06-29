@@ -1017,6 +1017,72 @@
       #configBody input:focus,
       #configBody textarea:focus { border-color:#cba6f7; box-shadow:none; }
 
+      /* Estilos para #modalSrc (claro y bonito) */
+      #modalSrc #configBox {
+        background: #ffffff; /* Fondo blanco */
+        color: #333333; /* Color de texto oscuro para contrastar */
+        border: 2px solid #cba6f7; /* Borde suave de Claude */
+        box-shadow: 0 12px 40px rgba(0,0,0,0.3); /* Sombra más suave */
+      }
+      #modalSrc #configHeader {
+        background: #f7f8fa; /* Fondo claro para el encabezado */
+        border-bottom: 1px solid #e2e5ea; /* Borde más sutil */
+      }
+      #modalSrc #configHeader strong {
+        color: #3b6ef8; /* Color azul de Claude para el título */
+      }
+      #modalSrc #configAcciones {
+        background: #f7f8fa; /* Fondo claro para la barra de acciones */
+        border-bottom: 1px solid #e2e5ea;
+      }
+      #modalSrc #configAcciones button {
+        background: #ffffff; /* Botones blancos */
+        color: #4a5060; /* Texto oscuro */
+        border: 1px solid #e2e5ea; /* Borde sutil */
+      }
+      #modalSrc #configAcciones button:hover {
+        background: #eef1ff; /* Ligero hover azul */
+        border-color: #3b6ef8; /* Borde azul */
+        color: #3b6ef8; /* Texto azul */
+        transform: none; /* Evitar transformación en hover */
+      }
+      #modalSrc #configEstado {
+        background: #f7f8fa; /* Fondo claro para el estado */
+        border-bottom: 1px solid #e2e5ea;
+        color: #8a909e; /* Texto más suave */
+      }
+      #modalSrc #configBody {
+        background: #f8f9fa; /* Fondo ligeramente gris para el cuerpo */
+      }
+      #modalSrc #configBody input[type="text"] {
+        background: #f7f8fa; /* Fondo claro para los inputs */
+        color: #111318; /* Texto oscuro */
+        border: 1px solid #e2e5ea; /* Borde sutil */
+      }
+      #modalSrc #configBody input[type="text"]:focus {
+        border-color: #3b6ef8; /* Borde azul al enfocar */
+        box-shadow: 0 0 0 3px rgba(59,110,248,0.1); /* Sombra de enfoque azul */
+        background: #ffffff; /* Fondo blanco al enfocar */
+      }
+      #modalSrc .claude-msg-label {
+        color: #8a909e; /* Color más suave para las etiquetas de los grupos */
+      }
+      #modalSrc .toggle-track {
+        background: #e2e5ea; /* Gris claro para el track del toggle */
+      }
+      #modalSrc .toggle input:checked + .toggle-track {
+        background: #89b4fa; /* Azul claro para el track cuando está checked */
+      }
+      #modalSrc .toggle-track::after {
+        background: #6c7086; /* Gris oscuro para el thumb */
+      }
+      #modalSrc .toggle input:checked + .toggle-track::after {
+        background: #ffffff; /* Blanco para el thumb cuando está checked */
+      }
+      #modalSrc .toggle-label {
+        color: #4a5060; /* Color de texto para el label del toggle */
+      }
+
 
       /* ── MINI MENÚ OPENROUTER ── */
       #menuOR {
