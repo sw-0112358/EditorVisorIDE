@@ -1611,7 +1611,6 @@
                   style="background:none;border:1px solid #e2e5ea;border-radius:8px;padding:6px 9px;font-size:15px;cursor:pointer;flex-shrink:0;color:#4a5060;transition:border-color .15s,color .15s;"
                   title="Adjuntar archivo (.html .js .css .json .txt)">📎</button>
           <textarea id="claudeInput" placeholder="Escribe tu consulta…" rows="1"
-                    onkeydown="claudeKeydown(event)"
                     oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'"></textarea>
           <button id="claudeEnviar" onclick="claudeEnviar()">Enviar ↵</button>
         </div>
@@ -3329,14 +3328,6 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
           return;
         }
         document.getElementById("claudeInput").focus();
-      }
-
-      function claudeKeydown(e) {
-        // Enter sin Shift envía, Shift+Enter hace salto de línea
-        if (e.key === "Enter" && !e.shiftKey) {
-          e.preventDefault();
-          claudeEnviar();
-        }
       }
 
       function claudeEnviar() {
