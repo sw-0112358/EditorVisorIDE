@@ -205,7 +205,7 @@
 
       .active, .collapsible:hover { background-color: transparent; }
 
-      .menuFullPantalla {
+      .classPaneles {
         position: fixed;
         top: 50%;
         right: 20px;
@@ -228,13 +228,13 @@
         font-family: 'JetBrains Mono', monospace;
       }
 
-      .menuFullPantalla::-webkit-scrollbar {
+      .classPaneles::-webkit-scrollbar {
         width: 4px;
       }
-      .menuFullPantalla::-webkit-scrollbar-track {
+      .classPaneles::-webkit-scrollbar-track {
         background: transparent;
       }
-      .menuFullPantalla::-webkit-scrollbar-thumb {
+      .classPaneles::-webkit-scrollbar-thumb {
         background: rgba(0, 120, 215, 0.3);
         border-radius: 3px;
       }
@@ -1280,7 +1280,7 @@
     </div>
 
 
-    <div class="menuFullPantalla">
+    <div id = "MenuFlotante" class="classPaneles">
       <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px 4px;border-bottom:1px solid var(--border-menu,#cba6f7);margin-bottom:6px;flex-shrink:0;">
         <strong style="font-size:13px;color:var(--color-menu-text,#000);">
           🪷v63❄️</strong>
@@ -1786,7 +1786,7 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
       }
 
       async function abrirConfig() {
-        document.querySelector(".menuFullPantalla").style.display = "none";
+        document.getElementById("MenuFlotante").style.display = "none";
 
         // Cargar Worker URL del localStorage
         document.getElementById("cfg-kv").value    = localStorage.getItem(WORKER_KEY) || KV_BASE;
@@ -1829,7 +1829,7 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
 
       function cerrarConfig() {
         document.getElementById("modalConfig").classList.remove("visible");
-        document.querySelector(".menuFullPantalla").style.display = "block";
+        document.queElementById("MenuFlotante").style.display = "block";
       }
 
       async function guardarConfig() {
@@ -2347,7 +2347,7 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
       }
 
       function traslape() {
-        const menu = document.querySelector(".menuFullPantalla");
+        const menu = document.getElementById("MenuFlotante");
         menu.style.display = menu.style.display === "none" ? "block" : "none";
       }
 
@@ -3009,7 +3009,7 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
       let _buscarTexto   = "";   // Texto buscado actualmente
 
       function abrirMenuReemplazar() {
-        document.querySelector(".menuFullPantalla").style.display = "none";
+        document.getElementById("MenuFlotante").style.display = "none";
         const m = document.getElementById("menuReemplazar");
         m.style.display = "flex";
         reiniciarMenuReemplazar();
@@ -3017,7 +3017,7 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
 
       function cerrarMenuReemplazar() {
         document.getElementById("menuReemplazar").style.display = "none";
-        document.querySelector(".menuFullPantalla").style.display = "block";
+        document.getElementById("MenuFlotante").style.display = "block";
       }
 
       function reiniciarMenuReemplazar() {
@@ -3227,7 +3227,7 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
 
       function abrirClaude() {
         // Ocultar todos los demás paneles flotantes
-        document.querySelector(".menuFullPantalla").style.display = "none";
+        document.getElementById("MenuFlotante").style.display = "none";
         document.getElementById("menuReemplazar").style.display   = "none";
         document.getElementById("modalDiff").classList.remove("visible");
         if (_arbolVisible) cerrarArbol();
