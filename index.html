@@ -523,11 +523,11 @@
         justify-content: space-between;
         align-items: center;
         padding: 10px 16px;
-        background: #181825;
-        border-bottom: 1px solid #45475a;
+        background: #f7f8fa;
+        border-bottom: 1px solid rgba(200, 200, 220, 0.5);
         flex-shrink: 0;
       }
-      #diffHeader strong { font-size: 14px; color: #cba6f7; }
+      #diffHeader strong { font-size: 14px; color: #333333; }
 
       #diffStats {
         font-size: 11px;
@@ -544,8 +544,8 @@
         padding: 8px 0;
       }
       #diffContent::-webkit-scrollbar        { width: 8px; }
-      #diffContent::-webkit-scrollbar-track  { background: #181825; }
-      #diffContent::-webkit-scrollbar-thumb  { background: #45475a; border-radius: 4px; }
+      #diffContent::-webkit-scrollbar-track  { background: transparent; }
+      #diffContent::-webkit-scrollbar-thumb  { background: rgba(212, 100, 169, 0.3); border-radius: 4px; }
 
       .diff-line {
         display: flex;
@@ -583,20 +583,12 @@
         display: flex;
         gap: 8px;
         padding: 10px 16px;
-        background: #181825;
-        border-top: 1px solid #45475a;
+        background: #f7f8fa;
+        border-top: 1px solid rgba(200, 200, 220, 0.5);
         flex-shrink: 0;
       }
-      #diffActions button {
-        flex: 1;
-        padding: 8px;
-        font-size: 13px;
-        margin: 0;
-      }
-      #btnAplicarBackup { background: #a6e3a1; color: #1e1e2e; }
-      #btnAplicarBackup:hover { background: #7ec47e; }
-      #btnCerrarDiff    { background: #45475a; color: #cdd6f4; }
-      #btnCerrarDiff:hover { background: #585b70; }
+      
+
 
 
 
