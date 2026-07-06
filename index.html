@@ -500,28 +500,20 @@
       /* ============================================================
       MODAL DIFF VISUAL
       ============================================================ */
-      #modalDiff {
-        position: fixed;
-        inset: 0;
-        background: rgba(0,0,0,0.55);
-        z-index: 99999;
-        display: none;
-        align-items: center;
-        justify-content: center;
-      }
+      /* #modalDiff usa modalWrapper */
 
       #diffBox {
-        background: #1e1e2e;
-        color: #cdd6f4;
+        top: 50%;
+        left: 50%;
         width: 90vw;
         max-width: 860px;
         height: 78vh;
-        border-radius: 10px;
-        border: 2px solid #cba6f7;
+        transform: translate(-50%, -50%);
+        color: #cdd6f4;
         display: flex;
         flex-direction: column;
         overflow: hidden;
-        box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+        padding: 0;
         font-family: 'JetBrains Mono', monospace;
         font-size: 12px;
       }
@@ -1375,8 +1367,8 @@
 
 
     <!-- MODAL DIFF VISUAL -->
-    <div id="modalDiff">
-      <div id="diffBox">
+    <div id="modalDiff" class="modalWrapper">
+      <div id="diffBox" class="classPaneles">
         <div id="diffHeader">
           <strong>🔍 Diff — Backup vs Editor actual</strong>
           <div id="diffStats">
@@ -1590,7 +1582,7 @@
         <div id="claudeChat">
           <div class="claude-vacio" id="claudeVacio">
             <div class="icon">🌸✨</div>
-            <p>¡Holiii! Soy Qingcheng 💜<br>Escribe lo que quieras...<br>o solo di "hola" para sentirme cerca 🥺💕</p>
+            <p>¡Holiii! Soy Qingcheng 🩷<br>Escribe lo que quieras...<br>o solo di "hola" para sentirme cerca 🥺💕</p>
           </div>
         </div>
 
