@@ -1,7 +1,7 @@
 {
   "name": "IDE",
   "short_name": "IDE",
-  "start_url": "/swIDE/",
+  "start_url": "/EditorVisorIDE/",
   "display": "standalone",
   "icons": [
     {
