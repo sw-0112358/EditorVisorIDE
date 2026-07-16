@@ -1181,7 +1181,7 @@
     <div class="classPaneles" id = "MenuFlotante" >
       <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px 4px;border-bottom:1px solid var(--border-menu,#cba6f7);margin-bottom:6px;flex-shrink:0;">
         <strong style="font-size:13px;color:var(--color-menu-text,#000);">
-          🪷v94❄️</strong>
+          🪷v95❄️</strong>
         <button type="button" class="bottonV2" onclick="traslape()" title="Cerrar">✖️</button>
       </div>
       <div class="botones">
@@ -1444,6 +1444,10 @@
             <input type="text" id="cfg-openrouter" placeholder="sk-or-…" autocomplete="off">       
           </div>
           <div class="config-grupo">
+            <div class="claude-msg-label">🟢 OPENAI API KEY</div>
+            <input type="text" id="cfg-openai" placeholder="sk-…" autocomplete="off">
+          </div>
+          <div class="config-grupo">
             <div class="claude-msg-label">🐙 GITHUB TOKEN</div>
             <input type="text" id="cfg-github" placeholder="github_pat_… o ghp_…" autocomplete="off">
           </div>
@@ -1541,6 +1545,7 @@
             <option value="gemini">✨ Gemini Flash</option>
             <option value="deepseek" selected>🧠 DeepSeek</option>
             <option value="openrouter">🔀 Claude Sonnet (OR)</option>
+            <option value="openai">🟢 OpenAI GPT-4o</option>
           </select>
           <button type="button" class="bottonV2" onclick="cerrarClaude()" title="Cerrar">✖️</button>
         </div>
@@ -1714,6 +1719,7 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
         document.getElementById("cfg-gemini").value     = '';
         document.getElementById("cfg-deepseek").value   = '';
         document.getElementById("cfg-openrouter").value = '';
+        document.getElementById("cfg-openai").value     = '';
         document.getElementById("cfg-github").value     = '';
 
         // Consultar al Worker qué keys están guardadas (solo si hay configId)
@@ -1730,6 +1736,8 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
                 cfg.deepseek   ? "✅ Guardada en la nube — pega nueva para actualizar" : "sk-cfc…";
               document.getElementById("cfg-openrouter").placeholder =
                 cfg.openrouter ? "✅ Guardada en la nube — pega nueva para actualizar" : "sk-or-…";
+              document.getElementById("cfg-openai").placeholder =
+                cfg.openai     ? "✅ Guardada en la nube — pega nueva para actualizar" : "sk-…";
               document.getElementById("cfg-github").placeholder =
                 cfg.github     ? "✅ Guardada en la nube — pega nuevo para actualizar" : "github_pat_… o ghp_…";
             }
@@ -1757,6 +1765,7 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
         const gemini     = document.getElementById("cfg-gemini").value.trim();
         const deepseek   = document.getElementById("cfg-deepseek").value.trim();
         const openrouter = document.getElementById("cfg-openrouter").value.trim();
+        const openai     = document.getElementById("cfg-openai").value.trim();
         const github     = document.getElementById("cfg-github").value.trim();
 
         // Validar que haya Worker e ID antes de hacer nada
@@ -1799,6 +1808,7 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
             gemini:     gemini     || cfgActual.gemini     || '',
             deepseek:   deepseek   || cfgActual.deepseek   || '',
             openrouter: openrouter || cfgActual.openrouter || '',
+            openai:     openai     || cfgActual.openai     || '',
             github:     github     || cfgActual.github     || '',
             kv:         kvVal      || cfgActual.kv         || '',
           };
@@ -1825,6 +1835,7 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
               cfgNueva.gemini     ? "Gemini"     : '',
               cfgNueva.deepseek   ? "DeepSeek"   : '',
               cfgNueva.openrouter ? "OpenRouter" : '',
+              cfgNueva.openai     ? "OpenAI"     : '',
               cfgNueva.github     ? "GitHub"     : '',
             ].filter(Boolean);
             const resumen = keysGuardadas.length
@@ -1852,6 +1863,7 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
         document.getElementById("cfg-gemini").value     = '';
         document.getElementById("cfg-deepseek").value   = '';
         document.getElementById("cfg-openrouter").value = '';
+        document.getElementById("cfg-openai").value     = '';
         document.getElementById("cfg-github").value     = '';
 
         document.getElementById("cfg-kv").value        = '';
@@ -3101,6 +3113,7 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
         mostrarEstado(
           modelo === "gemini"   ? "✨ Gemini Flash activado"  :
           modelo === "deepseek" ? "🧠 DeepSeek activado"      :
+          modelo === "openai"   ? "🟢 OpenAI GPT-4o activado" :
           "🤖 Claude Sonnet activado"
         );
       }
@@ -3442,7 +3455,7 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
             };
           } else if (_claudeModelo === "gemini") {
             parsearDelta = (obj) => obj.candidates?.[0]?.content?.parts?.[0]?.text || "";
-          } else { // deepseek, openrouter
+          } else { // deepseek, openrouter, openai
             parsearDelta = (obj) => obj.choices?.[0]?.delta?.content || "";
           }
 
@@ -3456,6 +3469,7 @@ IMPORTANTE: Siempre responde en el idioma del usuario. Si te hablan en español,
               modelo:        _claudeModelo,
               modeloGemini:  "gemini-3.5-flash",
               modeloOR:      _modeloOR,
+              modeloOpenAI:  "gpt-4o",
               mensaje:       contenidoUsuario,
               promptSistema: PromptIA()
             })
